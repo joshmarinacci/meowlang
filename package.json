@@ -1,0 +1,11 @@
+{
+  "name": "ohm-lang-blog",
+  "version": "0.0.1",
+  "description": "blog series on making a custom programming language with ohm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
