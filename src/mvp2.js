@@ -31,8 +31,7 @@ var MethodCall = {
         }
 
         if(arg.type == 'String') {
-            var val = obj[this._method](arg);
-            args[0] = val;
+            args[0] = obj[this._method](arg);
             return;
         }
 
@@ -41,14 +40,35 @@ var MethodCall = {
     }
 };
 
+var GLOBAL = {
+    print : function (arg) {
+        console.log('print:',arg._val);
+        return arg;
+    },
+    max: function(A,B) {
+        if(A.greaterThan(B).jsEquals(true)) return A;
+        return B;
+    }
+}
+
+var FunctionCall = {
+    make: function(funName, argObj) {
+        var obj = { _arg: argObj, type:'FunctionCall', _method:funName};
+        Object.setPrototypeOf(obj, FunctionCall);
+        return obj;
+    },
+    apply: function() {
+        var mname = this._method.substring(1);
+        return GLOBAL[mname].apply(null,this._arg);
+    }
+};
+
 var sem = gram.semantics().addOperation('toAST',{
     int: function(a) {
-        var int = parseInt(this.interval.contents, 10);
-        return Objects.Integer.make(int);
+        return Objects.Integer.make(parseInt(this.interval.contents, 10));
     },
     float: function(a,_,b) {
-        var flt = parseFloat(this.interval.contents,10);
-        return Objects.Float.make(flt);
+        return Objects.Float.make(parseFloat(this.interval.contents,10));
     },
     ident: function(a,b) { return "@" +this.interval.contents; },
     str: function(a,text,b) { return Objects.String.make(text.interval.contents); },
@@ -65,6 +85,10 @@ var sem = gram.semantics().addOperation('toAST',{
     GtExpr: function(a,_,b) {
         return [MethodCall.make(a.toAST(),'greaterThan')].concat(b.toAST());
     },
+    FunCall: function(a,_,b,_) {
+        return [FunctionCall.make(a.toAST(), b.toAST())];
+    },
+    Arguments: function(a) {      return a.asIteration().toAST();    },
 });
 
 
@@ -86,6 +110,10 @@ function test(input, answer) {
     }
     if(result.type == 'MethodCall') {
         result = result.apply();
+    }
+    if(result.type == 'FunctionCall') {
+        result = result.apply();
+        //console.log("final result is", result);
     }
     //assert(result.type,'Integer');
     assert(result.jsEquals(answer),true);
@@ -115,18 +143,16 @@ test('4!=5',[4,'ne',5]);
 
 //comments
 test('4 + //6\n 5',9);
-/*
-//function calls
-test("print(4)",["funcall","@print",[4]]); //returns 4, prints 4
-test("max(4,5)",["funcall","@max",[4,5]]); // returns 5
 
-*/
+//function calls
+test("print(4)",4); //returns 4, prints 4
+test("max(4,5)",5); // returns 5
+
 //string literals
 test(' "foo" ',"foo");
 test(' "foo" + "bar" ', "foobar");
+test('print("foo") ', 'foo');
 /*
-test('print("foo") ', ["funcall","@print",["foo"]]);
-
 // variables
 test('x','@x');
 test('x+5',['@x','add',5]);
