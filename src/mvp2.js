@@ -39,6 +39,20 @@ var MethodCall = {
 
     }
 };
+var Block = {
+    make: function (target, methodName) {
+        var obj = {_target: target, type: 'Block', _method: methodName};
+        Object.setPrototypeOf(obj, Block);
+        return obj;
+    },
+    apply: function() {
+        var results = this._target.map(function(result) {
+            if(result instanceof Array) return reduceArray(result);
+            return result;
+        });
+        return results.pop();
+    }
+};
 
 var GLOBAL = {
     print : function (arg) {
@@ -89,6 +103,9 @@ var sem = gram.semantics().addOperation('toAST',{
         return [FunctionCall.make(a.toAST(), b.toAST())];
     },
     Arguments: function(a) {      return a.asIteration().toAST();    },
+    Block: function(_,b,_) {
+        return Block.make(b.toAST());
+    },
 });
 
 
@@ -114,6 +131,9 @@ function test(input, answer) {
     if(result.type == 'FunctionCall') {
         result = result.apply();
         //console.log("final result is", result);
+    }
+    if(result.type == 'Block') {
+        result = result.apply();
     }
     //assert(result.type,'Integer');
     assert(result.jsEquals(answer),true);
@@ -159,10 +179,12 @@ test('x+5',['@x','add',5]);
 test('def x',['def','@x']);
 test("4 -> x",[4,'assign','@x']);
 test('4+5 -> x',[4,'add',[5,'assign','@x']]);
+*/
 
 //block
-test('{ 4+5 5+6 }',['block',[[4,'add',5],[5,'add',6]]]);
+test('{ 4+5 5+6 }',11);
 
+/*
 test('while { x <= 5 } { x+1 }', ['while',
     ['block',[['@x','lte',5]]],
     ['block',[['@x','add',1]]]
