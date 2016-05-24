@@ -33,5 +33,4 @@ JoshLang {
   // real version needs to support various unicode whitespace forms
   space := "\t" | " " | "\n" | comment
   comment = "//" (~"\n" any)*
-
 }
