@@ -1,9 +1,9 @@
 JoshLang {
-  Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr | FunCall | lit
-  AddExpr = lit "+" Expr
-  SubExpr = lit "-" Expr
-  MulExpr = lit "*" Expr
-  DivExpr = lit "/" Expr
+  Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr | FunCall | DefVar | AssignExpr | Block | WhileExpr | IfExpr | ident | lit
+  AddExpr = Expr "+" Expr
+  SubExpr = Expr "-" Expr
+  MulExpr = Expr "*" Expr
+  DivExpr = Expr "/" Expr
 
   EqExpr  = Expr "==" Expr
   NeExpr  = Expr "!=" Expr
@@ -11,16 +11,23 @@ JoshLang {
   LteExpr = Expr "<=" Expr
   GtExpr  = Expr ">"  Expr
   GteExpr = Expr ">=" Expr
+  AssignExpr = Expr "->" ident
 
   Group = "(" Expr ")"
+  Block = "{" Expr* "}"
+  WhileExpr = "while" Block Block
+  IfExpr    = "if" Block Block
 
   FunCall = ident "(" Arguments ")"
   Arguments = ListOf<Expr, ",">
+  DefVar  = "def" ident
 
-  lit = float | int
+  lit = float | int | str
   int = digit+
+  qq = "\""
+  str = qq (~qq any)+ qq
   float = digit* "." digit+
-  ident = letter (letter|digit)+
+  ident = letter (letter|digit)*
 
   // override space to include slash slash comments
   // real version needs to support various unicode whitespace forms

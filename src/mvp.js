@@ -90,6 +90,8 @@ x
 
 */
 
+
+
 /* working to get there
 4
 4+5 // 9
@@ -118,13 +120,16 @@ def x
 4 -> x
 x*5 // 20
 
+//block
+{ 4+5 5+6 }
+
 //while
 def x
 1 -> x
 while { x <= 5 } { x+1 => x }
 x // returns 5
 
-//iff
+//if
 def x
 5 -> x
 if { x > 3 } { 0 => x }
@@ -141,15 +146,11 @@ var assert = require('assert');
 //load the grammar
 var gram = ohm.grammar(fs.readFileSync('src/grammar3.ohm').toString());
 var sem = gram.semantics().addOperation('toList',{
-    int: function(a) {
-        return parseInt(this.interval.contents,10);
-    },
-    float: function(a,_,b) {
-        return parseFloat(this.interval.contents,10);
-    },
-    ident: function(a,b) {
-        return this.interval.contents;
-    },
+    int: function(a) {  return parseInt(this.interval.contents,10); },
+    float: function(a,_,b) { return parseFloat(this.interval.contents,10); },
+    ident: function(a,b) { return "@" +this.interval.contents; },
+    str: function(a,text,b) { return text.interval.contents; },
+
     AddExpr: function(a,_,b) {  return [a.toList(), 'add', b.toList()];  },
     MulExpr: function(a,_,b) {  return [a.toList(), 'mul', b.toList()]; },
     LtExpr:  function(a,_, b) { return [a.toList(), 'lt',  b.toList()]; },
@@ -159,21 +160,15 @@ var sem = gram.semantics().addOperation('toList',{
     EqExpr:  function(a,_, b) { return [a.toList(), 'eq',  b.toList()];  },
     NeExpr:  function(a,_, b) { return [a.toList(), 'ne',  b.toList()];  },
 
-    FunCall: function(a,_,b,_) {
-        //console.log("got a function call", a.toList());
-        //console.log("is iteration",this.isIteration(),this.children);
-        //console.log('args = ', args.value);
-        return ['funcall', a.toList(), b.toList()];
-    },
-    Arguments: function(a) {
-        //console.log("in args", this.isIteration(), a.isIteration());
-        //console.log('a is',a);
-        return a.asIteration().toList();
-    },
-    any: function(_) {
-        return this.interval.contents;
-    }
+    FunCall: function(a,_,b,_) {  return ['funcall', a.toList(), b.toList()]; },
+    Arguments: function(a) {      return a.asIteration().toList();    },
+    DefVar: function(_,ident) {   return ['def',ident.toList()];   },
+    AssignExpr: function(a,_,b) { return [a.toList(), 'assign', b.toList()]; },
 
+    Block: function(_,b,_) {  return ['block', b.toList()]; },
+
+    WhileExpr: function(_,cond,body) { return ['while',cond.toList(),body.toList()];  },
+    IfExpr: function(_,cond,body) { return ['if',cond.toList(),body.toList()]; }
 });
 
 
@@ -204,5 +199,40 @@ test('4!=5',[4,'ne',5]);
 test('4 + //6\n 5',[4,'add',5]);
 
 //function calls
-test("print(4)",["funcall","print",[4]]); //returns 4, prints 4
-test("max(4,5)",["funcall","max",[4,5]]); // returns 5
+test("print(4)",["funcall","@print",[4]]); //returns 4, prints 4
+test("max(4,5)",["funcall","@max",[4,5]]); // returns 5
+
+//string literals
+test(' "foo" ',"foo");
+test(' "foo" + "bar" ', ["foo","add","bar"]);
+test('print("foo") ', ["funcall","@print",["foo"]]);
+
+// variables
+test('x','@x');
+test('x+5',['@x','add',5]);
+test('def x',['def','@x']);
+test("4 -> x",[4,'assign','@x']);
+test('4+5 -> x',[4,'add',[5,'assign','@x']]);
+
+//block
+test('{ 4+5 5+6 }',['block',[[4,'add',5],[5,'add',6]]]);
+
+test('while { x <= 5 } { x+1 }', ['while',
+    ['block',[['@x','lte',5]]],
+    ['block',[['@x','add',1]]]
+]);
+
+test('while { x <= 5 } { x+1 -> x}', ['while',
+    ['block',[['@x','lte',5]]],
+    ['block',[['@x','add',[1, 'assign', '@x']]]]
+]);
+
+test('if { x <= 5 } { x+1 -> x }', ['if',
+    ['block',[['@x','lte',5]]],
+    ['block',[['@x','add',[1, 'assign', '@x']]]]
+]);
+
+//precedence of assignment operator is broken
+//precedence of all operators should just be left to right as a list of atoms
+
+
