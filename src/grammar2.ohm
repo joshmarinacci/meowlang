@@ -1,0 +1,9 @@
+JoshLang {
+  Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | lit
+  AddExpr = lit "+" Expr
+  SubExpr = lit "-" Expr
+  MulExpr = lit "*" Expr
+  DivExpr = lit "/" Expr
+  Group = "(" Expr ")"
+  lit = digit+
+}

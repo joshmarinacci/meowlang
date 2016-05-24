@@ -75,48 +75,6 @@ function calc(obj) {
 }
 
 
-var Integer = {
-    make: function(lit) {
-        var obj = { _val: lit};
-        Object.setPrototypeOf(obj, Integer);
-        return obj;
-    },
-    withUnit: function(unit) {
-        return UnitInteger.make(this._val,unit);
-    },
-    add: function(other) {
-        return this.make(this._val + other._val);
-    },
-    multiply: function(other) {
-        return this.make(this._val * other._val);
-    },
-    divide: function(other) {
-        return this.make(this._val / other._val);
-    },
-    assign: function(sym) {
-        sym._val = this;
-        return sym;
-    },
-    jsEquals: function(jsValue) {
-        return this._val == jsValue;
-    }
-};
-
-var UnitInteger = {
-    make: function(lit, unit) {
-        var obj = { _val: lit, _unit: unit}
-        Object.setPrototypeOf(obj,UnitInteger);
-        return obj;
-    },
-    multiply: function(other) {
-        if(other._unit) {
-            return this.make(this._val * other._val, this._unit);
-        } else {
-            return this.make(this._val * other._val, this._unit);
-        }
-    }
-}
-Object.setPrototypeOf(UnitInteger, Integer);
 
 var Group = {
     make: function(val) {
@@ -178,5 +136,4 @@ test(calc([Integer.make(4).add(Integer.make(5)).assign(Symbol.make('x',scope)),S
 
 /*
 test(calc(parse("add(4,5,6,7,8)"),18));
-
 */

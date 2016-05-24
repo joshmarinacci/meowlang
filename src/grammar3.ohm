@@ -1,0 +1,30 @@
+JoshLang {
+  Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr | FunCall | lit
+  AddExpr = lit "+" Expr
+  SubExpr = lit "-" Expr
+  MulExpr = lit "*" Expr
+  DivExpr = lit "/" Expr
+
+  EqExpr  = Expr "==" Expr
+  NeExpr  = Expr "!=" Expr
+  LtExpr  = Expr "<"  Expr
+  LteExpr = Expr "<=" Expr
+  GtExpr  = Expr ">"  Expr
+  GteExpr = Expr ">=" Expr
+
+  Group = "(" Expr ")"
+
+  FunCall = ident "(" Arguments ")"
+  Arguments = ListOf<Expr, ",">
+
+  lit = float | int
+  int = digit+
+  float = digit* "." digit+
+  ident = letter (letter|digit)+
+
+  // override space to include slash slash comments
+  // real version needs to support various unicode whitespace forms
+  space := "\t" | " " | "\n" | comment
+  comment = "//" (~"\n" any)*
+
+}
