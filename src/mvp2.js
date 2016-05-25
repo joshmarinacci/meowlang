@@ -96,8 +96,20 @@ var sem = gram.semantics().addOperation('toAST',{
     LtExpr: function(a,_,b) {
         return [MethodCall.make(a.toAST(),'lessThan')].concat(b.toAST());
     },
+    LteExpr: function(a,_,b) {
+        return [MethodCall.make(a.toAST(),'lessThanEqual')].concat(b.toAST());
+    },
     GtExpr: function(a,_,b) {
         return [MethodCall.make(a.toAST(),'greaterThan')].concat(b.toAST());
+    },
+    GteExpr: function(a,_,b) {
+        return [MethodCall.make(a.toAST(),'greaterThanEqual')].concat(b.toAST());
+    },
+    EqExpr: function(a,_,b) {
+        return [MethodCall.make(a.toAST(),'equal')].concat(b.toAST());
+    },
+    NeExpr: function(a,_,b) {
+        return [MethodCall.make(a.toAST(),'notEqual')].concat(b.toAST());
     },
     FunCall: function(a,_,b,_) {
         return [FunctionCall.make(a.toAST(), b.toAST())];
@@ -153,12 +165,11 @@ test('4.5*2',9);
 test('4+5+6+7',15+7);
 test('4<5',true);
 test('4>5',false);
-/*
-test('4<=5',[4,'lte',5]);
-test('4>=5',[4,'gte',5]);
-test('4==4',[4,'eq',4]);
-test('4!=5',[4,'ne',5]);
-*/
+test('4<=5',true);
+test('4>=5',false);
+test('4==4',true);
+test('4!=5',true);
+
 
 
 //comments
@@ -172,6 +183,7 @@ test("max(4,5)",5); // returns 5
 test(' "foo" ',"foo");
 test(' "foo" + "bar" ', "foobar");
 test('print("foo") ', 'foo');
+
 /*
 // variables
 test('x','@x');

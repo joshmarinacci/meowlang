@@ -24,8 +24,20 @@ var Integer = {
     lessThan: function(other) {
         return Boolean.make(this._val < other._val);
     },
+    lessThanEqual: function(other) {
+        return Boolean.make(this._val <= other._val);
+    },
     greaterThan: function(other) {
         return Boolean.make(this._val > other._val);
+    },
+    greaterThanEqual: function(other) {
+        return Boolean.make(this._val >= other._val);
+    },
+    equal: function(other) {
+        return Boolean.make(this._val == other._val);
+    },
+    notEqual: function(other) {
+        return Boolean.make(this._val != other._val);
     },
     assign: function(sym) {
         sym._val = this;
