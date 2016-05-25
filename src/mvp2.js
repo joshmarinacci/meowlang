@@ -52,9 +52,9 @@ var Block = {
         return obj;
     },
     apply: function() {
-        var results = this._target.map(function(result) {
-            if(result instanceof Array) return reduceArray(result);
-            return result;
+        var results = this._target.map(function(expr) {
+            if(expr instanceof Array) return reduceArray(expr);
+            return expr;
         });
         return results.pop();
     }
@@ -79,7 +79,14 @@ var FunctionCall = {
     },
     apply: function() {
         var mname = this._method;
-        return GLOBAL[mname.name].apply(null,this._arg);
+        var args = this._arg;
+        if(args instanceof Array) {
+            if(args[0].type == 'Symbol') {
+                args = args.slice();
+                args[0] = args[0].getValue();
+            }
+        }
+        return GLOBAL[mname.name].apply(null,args);
     }
 };
 
@@ -179,8 +186,12 @@ var sem = gram.semantics().addOperation('toAST',{
 
 
 function reduceArray(arr) {
-    if(arr.length == 1) return arr[0];
     arr = arr.slice();
+    if(arr.length == 1) {
+        var first = arr[0];
+        if(arr[0].type == 'FunctionCall') return arr[0].apply();
+        return arr[0];
+    }
     var first = arr.shift();
     first.apply(arr);
     return reduceArray(arr);
@@ -243,7 +254,9 @@ test('4>=5',false);
 test('4==4',true);
 test('4!=5',true);
 
-
+//precedence tests
+test('4*5+2',22);
+test('4+5*2',18);
 
 //comments
 test('4 + //6\n 5',9);
@@ -265,9 +278,12 @@ test("4 -> x",4);
 test('x+5',9);
 test('4+5 -> x',9);
 test('x+1',10);
+test('print(x)',9);
+
 
 //block
 test('{ 4+5 5+6 }',11);
+test('{ print("inside a block") 66 }',66);
 
 //increment
 test("1 -> x",1);
@@ -282,14 +298,10 @@ test("1 -> x",1);
 
 //while should return the last result of the body block
 test('while { x <= 5 } { print(x) x+1->x }',7);
-
 //test the print function inside of a block
 //test an if condition with a print function and assignment
 
 test("1 -> x",1);
 test('if { x < 5 } { print("foo") x+1 -> x }', 2);
-/*
-//precedence of assignment operator is broken
-//precedence of all operators should just be left to right as a list of atoms
-*/
+
 
