@@ -10,6 +10,7 @@ var Objects = require('./objects');
 
 //load the grammar
 var gram = ohm.grammar(fs.readFileSync('src/grammar3.ohm').toString());
+
 var MethodCall = {
     make: function(target, methodName) {
         var obj = { _target: target, type:'MethodCall', _method:methodName};
@@ -18,6 +19,7 @@ var MethodCall = {
     },
     apply: function(args) {
         var obj = this._target;
+        if(obj.type == 'Symbol') obj = obj.getValue();
         var arg = args[0];
         if(arg.type == 'MethodCall') {
             var val = obj[this._method](arg._target);
@@ -34,11 +36,15 @@ var MethodCall = {
             args[0] = obj[this._method](arg);
             return;
         }
+        if(arg.type == 'Symbol') {
+            args[0] = obj[this._method](arg);
+            return;
+        }
 
         throw new Error("shouldn't be here");
-
     }
 };
+
 var Block = {
     make: function (target, methodName) {
         var obj = {_target: target, type: 'Block', _method: methodName};
@@ -72,8 +78,8 @@ var FunctionCall = {
         return obj;
     },
     apply: function() {
-        var mname = this._method.substring(1);
-        return GLOBAL[mname].apply(null,this._arg);
+        var mname = this._method;
+        return GLOBAL[mname.name].apply(null,this._arg);
     }
 };
 
@@ -84,7 +90,7 @@ var sem = gram.semantics().addOperation('toAST',{
     float: function(a,_,b) {
         return Objects.Float.make(parseFloat(this.interval.contents,10));
     },
-    ident: function(a,b) { return "@" +this.interval.contents; },
+    ident: function(a,b) { return Objects.Symbol.make(this.interval.contents,null); },
     str: function(a,text,b) { return Objects.String.make(text.interval.contents); },
 
     AddExpr: function(a,_,b) {
@@ -111,13 +117,21 @@ var sem = gram.semantics().addOperation('toAST',{
     NeExpr: function(a,_,b) {
         return [MethodCall.make(a.toAST(),'notEqual')].concat(b.toAST());
     },
+    DefVar: function(_,ident) {
+        return ident.toAST();
+    },
     FunCall: function(a,_,b,_) {
         return [FunctionCall.make(a.toAST(), b.toAST())];
     },
-    Arguments: function(a) {      return a.asIteration().toAST();    },
+    Arguments: function(a) {
+        return a.asIteration().toAST();
+    },
     Block: function(_,b,_) {
         return Block.make(b.toAST());
     },
+    AssignExpr: function(a,_,b) {
+        return [MethodCall.make(a.toAST(),'assign')].concat(b.toAST());
+    }
 });
 
 
@@ -133,7 +147,6 @@ function test(input, answer) {
     if(match.failed()) return console.log("input failed to match " + input + match.message);
     var result = sem(match).toAST();
     //console.log('result = ', JSON.stringify(result,null,' '), answer);
-    //console.log("type = ", result.type);
     if(result instanceof Array) {
         result = reduceArray(result);
     }
@@ -142,15 +155,16 @@ function test(input, answer) {
     }
     if(result.type == 'FunctionCall') {
         result = result.apply();
-        //console.log("final result is", result);
     }
     if(result.type == 'Block') {
         result = result.apply();
     }
-    //assert(result.type,'Integer');
+    if(result.type == 'Symbol') {
+        assert.deepEqual(result,answer);
+        return;
+    }
     assert(result.jsEquals(answer),true);
 
-    //assert.deepEqual(result,answer);
     console.log('success',input);
 }
 
@@ -184,17 +198,18 @@ test(' "foo" ',"foo");
 test(' "foo" + "bar" ', "foobar");
 test('print("foo") ', 'foo');
 
-/*
 // variables
-test('x','@x');
-test('x+5',['@x','add',5]);
-test('def x',['def','@x']);
-test("4 -> x",[4,'assign','@x']);
-test('4+5 -> x',[4,'add',[5,'assign','@x']]);
-*/
+test('x',Objects.Symbol.make("x",null));
+test('def x',Objects.Symbol.make('x',null));
+
+test("4 -> x",4);
+test('x+5',9);
+test('4+5 -> x',9);
+test('x+1',10);
+//[4,'add',[5,'assign','@x']]);
 
 //block
-test('{ 4+5 5+6 }',11);
+//test('{ 4+5 5+6 }',11);
 
 /*
 test('while { x <= 5 } { x+1 }', ['while',

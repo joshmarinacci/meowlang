@@ -40,8 +40,8 @@ var Integer = {
         return Boolean.make(this._val != other._val);
     },
     assign: function(sym) {
-        sym._val = this;
-        return sym;
+        sym.setValue(this);
+        return this;
     },
     jsEquals: function(jsValue) {
         return this._val == jsValue;
@@ -117,9 +117,32 @@ var String = {
     }
 };
 
+var Symbol = {
+    scope:{},
+    make: function(name, scope) {
+        if(!this.scope[name]) {
+            var obj = {
+                name:name, type:'Symbol',
+                value:null,
+            };
+            Object.setPrototypeOf(obj, Symbol);
+            this.scope[name] = obj;
+        }
+        return this.scope[name];
+    },
+    setValue: function(v) {
+        this.value = v;
+        return v;
+    },
+    getValue: function() {
+        return this.value;
+    }
+};
+
 module.exports = {
     Integer: Integer,
     Float: Float,
     Boolean: Boolean,
-    String: String
+    String: String,
+    Symbol: Symbol
 };
