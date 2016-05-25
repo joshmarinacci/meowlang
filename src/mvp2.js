@@ -46,8 +46,8 @@ var MethodCall = {
 };
 
 var Block = {
-    make: function (target, methodName) {
-        var obj = {_target: target, type: 'Block', _method: methodName};
+    make: function (target) {
+        var obj = {_target: target, type: 'Block'};
         Object.setPrototypeOf(obj, Block);
         return obj;
     },
@@ -82,6 +82,27 @@ var FunctionCall = {
         return GLOBAL[mname.name].apply(null,this._arg);
     }
 };
+
+var WhileLoop = {
+    make: function(cond, body) {
+        var obj = { cond:cond, body:body, type:'WhileLoop'};
+        Object.setPrototypeOf(obj, WhileLoop);
+        return obj;
+    },
+    apply: function() {
+        var val = null;
+        while(true) {
+            var val = this.cond.apply();
+            if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
+            if (val._val == false) {
+                break;
+            } else {
+                var res = this.body.apply();
+            }
+        }
+        return val;
+    }
+}
 
 var sem = gram.semantics().addOperation('toAST',{
     int: function(a) {
@@ -131,12 +152,16 @@ var sem = gram.semantics().addOperation('toAST',{
     },
     AssignExpr: function(a,_,b) {
         return [MethodCall.make(a.toAST(),'assign')].concat(b.toAST());
+    },
+    WhileExpr: function(_,a,b) {
+        return WhileLoop.make(a.toAST(), b.toAST());
     }
 });
 
 
 function reduceArray(arr) {
     if(arr.length == 1) return arr[0];
+    arr = arr.slice();
     var first = arr.shift();
     first.apply(arr);
     return reduceArray(arr);
@@ -158,6 +183,14 @@ function test(input, answer) {
     }
     if(result.type == 'Block') {
         result = result.apply();
+        assert(result.jsEquals(answer),true);
+        return;
+    }
+    if(result.type == 'WhileLoop') {
+        result = result.apply();
+        assert(result.jsEquals(false),true);
+        console.log('success',input);
+        return;
     }
     if(result.type == 'Symbol') {
         assert.deepEqual(result,answer);
@@ -206,22 +239,26 @@ test("4 -> x",4);
 test('x+5',9);
 test('4+5 -> x',9);
 test('x+1',10);
-//[4,'add',[5,'assign','@x']]);
 
 //block
-//test('{ 4+5 5+6 }',11);
+test('{ 4+5 5+6 }',11);
+
+//increment
+test("1 -> x",1);
+test('x+1->x',2);
+test('x+1->x',3);
+
+//increment in a block
+test("1 -> x",1);
+test('{ x+1->x x+1->x}',3);
+
+test("1 -> x",1);
+test('while { x <= 5 } { print(x) x+1->x }');
+
+//test the print function inside of a block
+//test an if condition with a print function and assignment
 
 /*
-test('while { x <= 5 } { x+1 }', ['while',
-    ['block',[['@x','lte',5]]],
-    ['block',[['@x','add',1]]]
-]);
-
-test('while { x <= 5 } { x+1 -> x}', ['while',
-    ['block',[['@x','lte',5]]],
-    ['block',[['@x','add',[1, 'assign', '@x']]]]
-]);
-
 test('if { x <= 5 } { x+1 -> x }', ['if',
     ['block',[['@x','lte',5]]],
     ['block',[['@x','add',[1, 'assign', '@x']]]]

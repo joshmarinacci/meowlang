@@ -136,6 +136,12 @@ var Symbol = {
     },
     getValue: function() {
         return this.value;
+    },
+    dump: function() {
+        console.log("current scope",this.scope);
+        Object.keys(this.scope).forEach((name)=> {
+            console.log("name = ",name, this.scope[name]);
+        });
     }
 };
 
