@@ -104,6 +104,22 @@ var WhileLoop = {
     }
 }
 
+var IfCond = {
+    make: function(cond, body) {
+        var obj = { cond:cond, body:body, type:'IfCond'};
+        Object.setPrototypeOf(obj, IfCond);
+        return obj;
+    },
+    apply: function() {
+        var val = this.cond.apply();
+        if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
+        if (val._val == true) {
+            var res = this.body.apply();
+            return res;
+        }
+    }
+}
+
 var sem = gram.semantics().addOperation('toAST',{
     int: function(a) {
         return Objects.Integer.make(parseInt(this.interval.contents, 10));
@@ -155,6 +171,9 @@ var sem = gram.semantics().addOperation('toAST',{
     },
     WhileExpr: function(_,a,b) {
         return WhileLoop.make(a.toAST(), b.toAST());
+    },
+    IfExpr: function(_,a,b) {
+        return IfCond.make(a.toAST(), b.toAST());
     }
 });
 
@@ -184,11 +203,18 @@ function test(input, answer) {
     if(result.type == 'Block') {
         result = result.apply();
         assert(result.jsEquals(answer),true);
+        console.log('success',input);
         return;
     }
     if(result.type == 'WhileLoop') {
         result = result.apply();
         assert(result.jsEquals(false),true);
+        console.log('success',input);
+        return;
+    }
+    if(result.type == 'IfCond') {
+        result = result.apply();
+        assert(result.jsEquals(answer),true);
         console.log('success',input);
         return;
     }
@@ -251,19 +277,18 @@ test('x+1->x',3);
 //increment in a block
 test("1 -> x",1);
 test('{ x+1->x x+1->x}',3);
-
+test('{ x+1->x x+1->x}',5);
 test("1 -> x",1);
-test('while { x <= 5 } { print(x) x+1->x }');
+
+//while should return the last result of the body block
+test('while { x <= 5 } { print(x) x+1->x }',7);
 
 //test the print function inside of a block
 //test an if condition with a print function and assignment
 
+test("1 -> x",1);
+test('if { x < 5 } { print("foo") x+1 -> x }', 2);
 /*
-test('if { x <= 5 } { x+1 -> x }', ['if',
-    ['block',[['@x','lte',5]]],
-    ['block',[['@x','add',[1, 'assign', '@x']]]]
-]);
-
 //precedence of assignment operator is broken
 //precedence of all operators should just be left to right as a list of atoms
 */
