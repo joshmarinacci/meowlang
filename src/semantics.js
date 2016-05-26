@@ -46,13 +46,13 @@ module.exports = {
             DefVar: function (_, ident) {
                 return ident.toAST();
             },
-            FunCall: function (a, _, b, _) {
+            FunCall: function (a, _1, b, _2) {
                 return [Objects.FunctionCall.make(a.toAST(), b.toAST())];
             },
             Arguments: function (a) {
                 return a.asIteration().toAST();
             },
-            Block: function (_, b, _) {
+            Block: function (_1, b, _2) {
                 return Objects.Block.make(b.toAST());
             },
             AssignExpr: function (a, _, b) {

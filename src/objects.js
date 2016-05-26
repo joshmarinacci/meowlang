@@ -222,8 +222,8 @@ var FunctionCall = {
         var mname = this._method;
         var args = this._arg;
         if(args instanceof Array) {
+            args = args.slice();
             if(args[0].apply) {
-                args = args.slice();
                 args[0] = args[0].apply();
             }
         }
@@ -240,6 +240,7 @@ var MethodCall = {
     apply: function(args) {
         var obj = this._target;
         if(obj.apply) obj = obj.apply();
+        if(obj instanceof Array) obj = reduceArray(obj);
         var arg = args[0];
         if(arg.type == 'MethodCall') {
             arg._target = obj[this._method](arg._target);

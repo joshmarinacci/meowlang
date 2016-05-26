@@ -3,27 +3,26 @@
  */
 /*
 * rewrite evaluation system
-* every node has an apply method
-* this method never changes state of the node, it only returns new content
-*    so that we can evaluate a node over and over with no changes
-* add tests that involve variable resolution and calling functions as args to functions
+* //every node has an apply method
+* //this method never changes state of the node, it only returns new content
+* //   so that we can evaluate a node over and over with no changes
+* //add tests that involve variable resolution and calling functions as args to functions
 * a function/method only gets the first argument of the array. if you want
 * multiple arguments then you have to use parenthesis
 * add tests that use parenthensis for grouping
 *
-* symbol.apply returns the current value of the symbol
-* methodcall.apply evals the arguments, then executes the method call, returns the result
-* block.apply executes every expression in the block, return result of last expression
-* functioncall.apply evals the arguments, then executes the function call, returns the result.
-* while loop applys the condition block each time through the loop, and the body block each time. returns last result of the body
-* if loop applies the condition once, applies the body once, returns value of the body
+* //symbol.apply returns the current value of the symbol
+* //methodcall.apply evals the arguments, then executes the method call, returns the result
+* //block.apply executes every expression in the block, return result of last expression
+* //functioncall.apply evals the arguments, then executes the function call, returns the result.
+* //while loop applys the condition block each time through the loop, and the body block each time. returns last result of the body
+* //if loop applies the condition once, applies the body once, returns value of the body
 * i should be able to get rid of reduce array
 *
 * what will the AST look like for chained methods vs explicit methods
 * fold function calls and method calls into one? methods on a global object?
-*
-*
-* down to 415 lines of code
+**
+* LOC = 415, 354 lines of code
 */
 
 var ohm = require('ohm-js');
@@ -116,10 +115,10 @@ test("1 -> x",1);
 test('if { x < 5 } { print("foo") x+1 -> x }', 2);
 
 
-return;
 // compound tests
 // function returns value to math expression
-test('max(4,5)*4',20);
+test('max(4,5)*6',30);
+return;
 test('4*max(4,5)',20);
 // function returns value to function
 test('max(4,max(6,5))',6);
