@@ -168,16 +168,17 @@ var WhileLoop = {
     },
     apply: function() {
         var val = null;
+        var res = null;
         while(true) {
             var val = this.cond.apply();
             if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
             if (val._val == false) {
                 break;
             } else {
-                var res = this.body.apply();
+                res = this.body.apply();
             }
         }
-        return val;
+        return res;
     }
 }
 
@@ -191,8 +192,7 @@ var IfCond = {
         var val = this.cond.apply();
         if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
         if (val._val == true) {
-            var res = this.body.apply();
-            return res;
+            return this.body.apply();
         }
     }
 }
@@ -242,22 +242,8 @@ var MethodCall = {
             arg._target = val;
             return;
         }
-        if(arg.type == 'Integer') {
-            var val = obj[this._method](arg);
-            args[0] = val;
-            return;
-        }
-
-        if(arg.type == 'String') {
-            args[0] = obj[this._method](arg);
-            return;
-        }
-        if(arg.type == 'Symbol') {
-            args[0] = obj[this._method](arg);
-            return;
-        }
-
-        throw new Error("shouldn't be here");
+        args[0] = obj[this._method](arg);
+        return;
     }
 };
 

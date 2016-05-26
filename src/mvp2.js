@@ -117,7 +117,7 @@ test('{ x+1->x x+1->x}',5);
 test("1 -> x",1);
 
 //while should return the last result of the body block
-test('while { x <= 5 } { print(x) x+1->x }',false);
+test('while { x <= 5 } { print(x) x+1->x }',8);
 //test the print function inside of a block
 //test an if condition with a print function and assignment
 
