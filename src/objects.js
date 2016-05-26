@@ -2,7 +2,6 @@
  * Created by josh on 5/23/16.
  */
 
-
 var Integer = {
     make: function(lit) {
         var obj = { _val: lit, type:'Integer'};
@@ -45,6 +44,9 @@ var Integer = {
     },
     jsEquals: function(jsValue) {
         return this._val == jsValue;
+    },
+    apply: function() {
+        return this;
     }
 };
 
@@ -85,6 +87,9 @@ var Float = {
     },
     jsEquals: function(jsValue) {
         return this._val == jsValue;
+    },
+    apply: function() {
+        return this;
     }
 };
 
@@ -98,6 +103,9 @@ var Boolean = {
     },
     jsEquals: function(jsValue) {
         return this._val === jsValue;
+    },
+    apply: function() {
+        return this;
     }
 };
 
@@ -112,6 +120,9 @@ var String = {
     },
     jsEquals: function(jsValue) {
         return this._val === jsValue;
+    },
+    apply: function() {
+        return this;
     }
 };
 
@@ -137,6 +148,9 @@ var Symbol = {
         Object.keys(this.scope).forEach((name) => {
             console.log("name = ",name, this.scope[name]);
         });
+    },
+    apply: function() {
+        return this.getValue();
     }
 };
 
@@ -149,7 +163,7 @@ var Block = {
     apply: function() {
         var results = this._target.map(function(expr) {
             if(expr instanceof Array) return reduceArray(expr);
-            return expr;
+            return expr.apply();
         });
         return results.pop();
     }
@@ -182,9 +196,8 @@ var IfCond = {
     apply: function() {
         var val = this.cond.apply();
         if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
-        if (val._val == true) {
-            return this.body.apply();
-        }
+        if (val._val == true) return this.body.apply();
+        return Boolean.make(false);
     }
 };
 
@@ -209,9 +222,9 @@ var FunctionCall = {
         var mname = this._method;
         var args = this._arg;
         if(args instanceof Array) {
-            if(args[0].type == 'Symbol') {
+            if(args[0].apply) {
                 args = args.slice();
-                args[0] = args[0].getValue();
+                args[0] = args[0].apply();
             }
         }
         return GLOBAL[mname.name].apply(null,args);
@@ -226,7 +239,7 @@ var MethodCall = {
     },
     apply: function(args) {
         var obj = this._target;
-        if(obj.type == 'Symbol') obj = obj.getValue();
+        if(obj.apply) obj = obj.apply();
         var arg = args[0];
         if(arg.type == 'MethodCall') {
             arg._target = obj[this._method](arg._target);

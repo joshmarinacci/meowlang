@@ -42,19 +42,10 @@ function test(input, answer) {
     if(match.failed()) return console.log("input failed to match " + input + match.message);
     var result = sem(match).toAST();
     //console.log('result = ', JSON.stringify(result,null,' '), answer);
-    if(result instanceof Array) {
-        result = Objects.reduceArray(result);
-    }
-
-    if(result.apply) {
-        result = result.apply();
-    }
-    if(result.type == 'Symbol') {
-        assert.deepEqual(result,answer);
-        return;
-    }
+    if(result instanceof Array) result = Objects.reduceArray(result);
+    if(result.apply) result = result.apply();
+    if(result == null && answer == null) return console.log('success',input);
     assert(result.jsEquals(answer),true);
-
     console.log('success',input);
 }
 
@@ -91,8 +82,8 @@ test(' "foo" + "bar" ', "foobar");
 test('print("foo") ', 'foo');
 
 // variables
-test('x',Objects.Symbol.make("x",null));
-test('def x',Objects.Symbol.make('x',null));
+test('x',null);
+test('def x',null);
 
 test("4 -> x",4);
 test('x+5',9);
