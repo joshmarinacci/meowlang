@@ -50,7 +50,7 @@ var Integer = {
 
 var UnitInteger = {
     make: function(lit, unit) {
-        var obj = { _val: lit, _unit: unit}
+        var obj = { _val: lit, _unit: unit};
         Object.setPrototypeOf(obj,UnitInteger);
         return obj;
     },
@@ -61,7 +61,7 @@ var UnitInteger = {
             return this.make(this._val * other._val, this._unit);
         }
     }
-}
+};
 Object.setPrototypeOf(UnitInteger, Integer);
 
 var Float = {
@@ -91,21 +91,19 @@ var Float = {
 var Boolean = {
     make: function(lit) {
         var obj = {
-            _val:lit, type:'Boolean',
-        }
+            _val:lit, type:'Boolean'
+        };
         Object.setPrototypeOf(obj, Boolean);
         return obj;
     },
     jsEquals: function(jsValue) {
         return this._val === jsValue;
     }
-}
+};
 
 var String = {
     make: function(lit) {
-        var obj = {
-            _val:lit, type:'String',
-        }
+        var obj = { _val:lit, type:'String' };
         Object.setPrototypeOf(obj, String);
         return obj;
     },
@@ -121,10 +119,7 @@ var Symbol = {
     scope:{},
     make: function(name, scope) {
         if(!this.scope[name]) {
-            var obj = {
-                name:name, type:'Symbol',
-                value:null,
-            };
+            var obj = { name:name, type:'Symbol', value:null };
             Object.setPrototypeOf(obj, Symbol);
             this.scope[name] = obj;
         }
@@ -139,7 +134,7 @@ var Symbol = {
     },
     dump: function() {
         console.log("current scope",this.scope);
-        Object.keys(this.scope).forEach((name)=> {
+        Object.keys(this.scope).forEach((name) => {
             console.log("name = ",name, this.scope[name]);
         });
     }
@@ -167,20 +162,16 @@ var WhileLoop = {
         return obj;
     },
     apply: function() {
-        var val = null;
-        var res = null;
+        var ret = null;
         while(true) {
-            var val = this.cond.apply();
-            if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
-            if (val._val == false) {
-                break;
-            } else {
-                res = this.body.apply();
-            }
+            var condVal = this.cond.apply();
+            if (condVal.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
+            if (condVal._val == false) break;
+            ret = this.body.apply();
         }
-        return res;
+        return ret;
     }
-}
+};
 
 var IfCond = {
     make: function(cond, body) {
@@ -195,7 +186,7 @@ var IfCond = {
             return this.body.apply();
         }
     }
-}
+};
 
 var GLOBAL = {
     print : function (arg) {
@@ -238,19 +229,16 @@ var MethodCall = {
         if(obj.type == 'Symbol') obj = obj.getValue();
         var arg = args[0];
         if(arg.type == 'MethodCall') {
-            var val = obj[this._method](arg._target);
-            arg._target = val;
+            arg._target = obj[this._method](arg._target);
             return;
         }
         args[0] = obj[this._method](arg);
-        return;
     }
 };
 
 function reduceArray(arr) {
     arr = arr.slice();
     if(arr.length == 1) {
-        var first = arr[0];
         if(arr[0].type == 'FunctionCall') return arr[0].apply();
         return arr[0];
     }
