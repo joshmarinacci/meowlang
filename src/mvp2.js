@@ -56,7 +56,7 @@ test('4.5',4.5);
 test('4+5',9);
 test('4*5',20);
 test('4.5*2',9);
-test('4+5+6+7',15+7);
+test('4+5+6+7',4+5+6+7);
 test('4<5',true);
 test('4>5',false);
 test('4<=5',true);
@@ -90,7 +90,6 @@ test('4+5 -> x',9);
 test('x+1',10);
 test('print(x)',9);
 
-
 //block
 test('{ 4+5 5+6 }',11);
 test('{ print("inside a block") 66 }',66);
@@ -118,7 +117,6 @@ test('if { x < 5 } { print("foo") x+1 -> x }', 2);
 // compound tests
 // function returns value to math expression
 test('max(4,5)*6',30);
-return;
 //TODO: test('4*max(4,5)',20);
 // function returns value to function
 //TODO: test('max(4,max(6,5))',6);

@@ -232,21 +232,18 @@ var FunctionCall = {
 };
 
 var MethodCall = {
-    make: function(target, methodName) {
-        var obj = { _target: target, type:'MethodCall', _method:methodName};
+    make: function(target, methodName, arg) {
+        var obj = { _target: target, type:'MethodCall', _method:methodName, _arg:arg};
         Object.setPrototypeOf(obj, MethodCall);
         return obj;
     },
-    apply: function(args) {
+    apply: function() {
         var obj = this._target;
         if(obj.apply) obj = obj.apply();
-        if(obj instanceof Array) obj = reduceArray(obj);
-        var arg = args[0];
-        if(arg.type == 'MethodCall') {
-            arg._target = obj[this._method](arg._target);
-            return;
+        if(this._arg.type == 'MethodCall') {
+            return obj[this._method](this._arg);
         }
-        args[0] = obj[this._method](arg);
+        return obj[this._method](this._arg);
     }
 };
 
