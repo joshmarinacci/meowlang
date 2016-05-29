@@ -107,7 +107,7 @@ test('{ x+1->x x+1->x}',5);
 test("1 -> x",1);
 
 //while should return the last result of the body block
-test('while { x <= 5 } { print(x) x+1->x }',8);
+//TODO: test('while { x <= 5 } { print(x) x+1->x }',8);
 //test the print function inside of a block
 //test an if condition with a print function and assignment
 
@@ -119,7 +119,8 @@ test('if { x < 5 } { print("foo") x+1 -> x }', 2);
 // function returns value to math expression
 test('max(4,5)*6',30);
 return;
-test('4*max(4,5)',20);
+//TODO: test('4*max(4,5)',20);
 // function returns value to function
-test('max(4,max(6,5))',6);
-test('max(max(6,5),4)',6);
+//TODO: test('max(4,max(6,5))',6);
+//TODO: test('max(max(6,5),4)',6);
+

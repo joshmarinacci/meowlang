@@ -212,7 +212,7 @@ test('x','@x');
 test('x+5',['@x','add',5]);
 test('def x',['def','@x']);
 test("4 -> x",[4,'assign','@x']);
-test('4+5 -> x',[4,'add',[5,'assign','@x']]);
+test('4+5 -> x',[[4,'add',5],'assign','@x']);
 
 //block
 test('{ 4+5 5+6 }',['block',[[4,'add',5],[5,'add',6]]]);
@@ -224,15 +224,12 @@ test('while { x <= 5 } { x+1 }', ['while',
 
 test('while { x <= 5 } { x+1 -> x}', ['while',
     ['block',[['@x','lte',5]]],
-    ['block',[['@x','add',[1, 'assign', '@x']]]]
+    ['block',[ [['@x','add',1], 'assign', '@x']]]
 ]);
 
 test('if { x <= 5 } { x+1 -> x }', ['if',
     ['block',[['@x','lte',5]]],
-    ['block',[['@x','add',[1, 'assign', '@x']]]]
+    ['block',[   [['@x','add',1], 'assign', '@x']]]
 ]);
 
-//precedence of assignment operator is broken
-//precedence of all operators should just be left to right as a list of atoms
-
-
+test('4+5*6',[[4,'add',5],'mul',6]);

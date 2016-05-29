@@ -1,9 +1,10 @@
 JoshLang {
-  Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr | FunCall | DefVar | AssignExpr | Block | WhileExpr | IfExpr | ident | lit
-  AddExpr = Expr "+" Expr
-  SubExpr = Expr "-" Expr
-  MulExpr = Expr "*" Expr
-  DivExpr = Expr "/" Expr
+  Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr | FunCall | DefVar | AssignExpr | Block | WhileExpr | IfExpr | TermExpr
+  TermExpr = lit | ident
+  AddExpr = Expr "+" TermExpr
+  SubExpr = Expr "-" TermExpr
+  MulExpr = Expr "*" TermExpr
+  DivExpr = Expr "/" TermExpr
 
   EqExpr  = Expr "==" Expr
   NeExpr  = Expr "!=" Expr
