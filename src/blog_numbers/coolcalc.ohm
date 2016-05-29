@@ -1,0 +1,27 @@
+CoolCalc {
+  // just a basic integer
+  Expr =  AddExpr
+
+  AddExpr = AddExpr "+" MulExpr -- plus
+          | AddExpr "-" MulExpr -- minus
+          | MulExpr
+
+  MulExpr = MulExpr "*" PriExpr -- times
+          | MulExpr "/" PriExpr -- divide
+          | PriExpr
+
+
+  PriExpr = "(" Expr ")" -- paren
+          | Number
+
+  Number = oct | hex | float | int
+  int    = digit+
+  float  = digit+ "." digit+ exp?
+  exp    = "e" "-"? digit+
+  hex    = "0x" hexDigit+
+  oct    = "0o" octDigit+
+  octDigit = "0".."7"
+  //hexDigit := "0".."9" | "a".."f" | "A".."F"
+}
+
+

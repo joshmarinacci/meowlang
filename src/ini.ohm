@@ -1,0 +1,9 @@
+JoshLang {
+    line = comment | keypair | section
+    comment = ";" (~eol any)* eol
+    keypair = key "=" value eol
+    key = letter+
+    value = (~eol any)+
+    section = "[" (~"]" any)* "]"
+    eol = "\n"
+}
