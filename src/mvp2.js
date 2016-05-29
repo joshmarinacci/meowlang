@@ -117,8 +117,8 @@ test('if { x < 5 } { print("foo") x+1 -> x }', 2);
 // compound tests
 // function returns value to math expression
 test('max(4,5)*6',30);
-//TODO: test('4*max(4,5)',20);
+test('4*max(4,5)',20);
 // function returns value to function
-//TODO: test('max(4,max(6,5))',6);
-//TODO: test('max(max(6,5),4)',6);
+test('max(4,max(6,5))',6);
+test('max(max(6,5),4)',6);
 

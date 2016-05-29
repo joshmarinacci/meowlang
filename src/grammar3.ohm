@@ -1,6 +1,6 @@
 JoshLang {
   Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr | FunCall | DefVar | AssignExpr | Block | WhileExpr | IfExpr | TermExpr
-  TermExpr = lit | ident
+  TermExpr = FunCall | lit | ident
   AddExpr = Expr "+" TermExpr
   SubExpr = Expr "-" TermExpr
   MulExpr = Expr "*" TermExpr

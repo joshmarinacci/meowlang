@@ -221,12 +221,7 @@ var FunctionCall = {
     apply: function() {
         var mname = this._method;
         var args = this._arg;
-        if(args instanceof Array) {
-            args = args.slice();
-            if(args[0].apply) {
-                args[0] = args[0].apply();
-            }
-        }
+        if(args instanceof Array) args = args.map((arg) => arg.apply());
         return GLOBAL[mname.name].apply(null,args);
     }
 };
@@ -240,10 +235,9 @@ var MethodCall = {
     apply: function() {
         var obj = this._target;
         if(obj.apply) obj = obj.apply();
-        if(this._arg.type == 'MethodCall') {
-            return obj[this._method](this._arg);
-        }
-        return obj[this._method](this._arg);
+        var arg = this._arg;
+        if(arg.apply && this._method != 'assign') arg = arg.apply();
+        return obj[this._method](arg);
     }
 };
 
