@@ -23,6 +23,8 @@
 * fold function calls and method calls into one? methods on a global object?
 **
 * LOC = 415, 354 lines of code
+* 346
+* 367, added function def support
 */
 
 var ohm = require('ohm-js');
@@ -42,12 +44,11 @@ function test(input, answer) {
     var result = sem(match).toAST();
     //console.log('result = ', JSON.stringify(result,null,' '), answer);
     if(result instanceof Array) result = Objects.reduceArray(result);
-    if(result.apply) result = result.apply();
+    if(result.apply) result = result.apply(Objects.GlobalScope);
     if(result == null && answer == null) return console.log('success',input);
     assert(result.jsEquals(answer),true);
     console.log('success',input);
 }
-
 //literals
 test('4',4);
 test('4.5',4.5);
@@ -83,8 +84,8 @@ test('print("foo") ', 'foo');
 // variables
 test('x',null);
 test('def x',null);
-
 test("4 -> x",4);
+
 test('x+5',9);
 test('4+5 -> x',9);
 test('x+1',10);
@@ -121,4 +122,15 @@ test('4*max(4,5)',20);
 // function returns value to function
 test('max(4,max(6,5))',6);
 test('max(max(6,5),4)',6);
+
+test('{ def myFun()    { 1+2+3+4 } myFun()  }', 10);
+test('{ def myFun(x)   { 1+2+3+4 } myFun()  }', 10);
+test('{ def myFun(x,y) { 1+2+3+4 } myFun(2,3)  }', 10);
+
+
+test('{ def myFun(z)   { 1+z } myFun(9) }', 10);
+test('{ def myFun(x)   { 1+x } myFun(9) }', 10);
+test('{ def myFun(x,y) { 1+2+3+4 } myFun(2,3) }',10);
+test('{ def myFun(x,y) { print("foo") x } myFun(2,3) }',2);
+test('{ def myFun(x,y) { print("foo") x+y } myFun(4,6) }',10);
 

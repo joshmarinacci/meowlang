@@ -38,10 +38,6 @@ var Integer = {
     notEqual: function(other) {
         return Boolean.make(this._val != other._val);
     },
-    assign: function(sym) {
-        sym.setValue(this);
-        return this;
-    },
     jsEquals: function(jsValue) {
         return this._val == jsValue;
     },
@@ -126,31 +122,60 @@ var String = {
     }
 };
 
-var Symbol = {
-    scope:{},
-    make: function(name, scope) {
-        if(!this.scope[name]) {
-            var obj = { name:name, type:'Symbol', value:null };
-            Object.setPrototypeOf(obj, Symbol);
-            this.scope[name] = obj;
-        }
-        return this.scope[name];
+var Scope = {
+    storage: {},
+    makeSubScope: function() {
+        var ss = { storage: {} };
+        Object.setPrototypeOf(ss,Scope);
+        return ss;
     },
-    setValue: function(v) {
-        this.value = v;
-        return v;
+    hasSymbol: function(name) {
+        return this.storage[name]
     },
-    getValue: function() {
-        return this.value;
+    setSymbol: function(name, obj) {
+        this.storage[name] = obj;
+    },
+    getSymbol: function(name) {
+        return this.storage[name];
     },
     dump: function() {
-        console.log("current scope",this.scope);
-        Object.keys(this.scope).forEach((name) => {
-            console.log("name = ",name, this.scope[name]);
+        console.log("scope: ");
+        Object.keys(this.storage).forEach((name) => {
+            console.log("   name = ",name, this.storage[name]);
         });
+    }
+};
+
+
+var Symbol = {
+    make: function(name) {
+        var obj = { name:name, type:'Symbol'};
+        Object.setPrototypeOf(obj, Symbol);
+        return obj;
+    },
+    apply: function(scope) {
+        return scope.getSymbol(this.name);
+    }
+};
+
+
+var FunctionDef = {
+    make: function(sym, params, body){
+        var obj = { sym: sym, type: 'FunctionDef', params: params, body: body};
+        Object.setPrototypeOf(obj, FunctionDef);
+        return obj;
     },
     apply: function() {
-        return this.getValue();
+        //create a global function for this body
+        var body = this.body;
+        var params = this.params;
+        GLOBAL[this.sym.name] = function() {
+            var args = arguments;
+            var scope = Scope.makeSubScope();
+            params.forEach((param,i) => scope.setSymbol(param.name,args[i]));
+            scope.dump();
+            return body.apply(scope);
+        }
     }
 };
 
@@ -160,11 +185,8 @@ var Block = {
         Object.setPrototypeOf(obj, Block);
         return obj;
     },
-    apply: function() {
-        var results = this._target.map(function(expr) {
-            if(expr instanceof Array) return reduceArray(expr);
-            return expr.apply();
-        });
+    apply: function(scope) {
+        var results = this._target.map((expr) => expr.apply(scope));
         return results.pop();
     }
 };
@@ -175,13 +197,13 @@ var WhileLoop = {
         Object.setPrototypeOf(obj, WhileLoop);
         return obj;
     },
-    apply: function() {
+    apply: function(scope) {
         var ret = null;
         while(true) {
-            var condVal = this.cond.apply();
+            var condVal = this.cond.apply(scope);
             if (condVal.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
             if (condVal._val == false) break;
-            ret = this.body.apply();
+            ret = this.body.apply(scope);
         }
         return ret;
     }
@@ -193,10 +215,10 @@ var IfCond = {
         Object.setPrototypeOf(obj, IfCond);
         return obj;
     },
-    apply: function() {
-        var val = this.cond.apply();
+    apply: function(scope) {
+        var val = this.cond.apply(scope);
         if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
-        if (val._val == true) return this.body.apply();
+        if (val._val == true) return this.body.apply(scope);
         return Boolean.make(false);
     }
 };
@@ -218,10 +240,10 @@ var FunctionCall = {
         Object.setPrototypeOf(obj, FunctionCall);
         return obj;
     },
-    apply: function() {
+    apply: function(scope) {
         var mname = this._method;
         var args = this._arg;
-        if(args instanceof Array) args = args.map((arg) => arg.apply());
+        if(args instanceof Array) args = args.map((arg) => arg.apply(scope));
         return GLOBAL[mname.name].apply(null,args);
     }
 };
@@ -232,26 +254,19 @@ var MethodCall = {
         Object.setPrototypeOf(obj, MethodCall);
         return obj;
     },
-    apply: function() {
+    apply: function(scope) {
         var obj = this._target;
-        if(obj.apply) obj = obj.apply();
+        if(obj.apply) obj = obj.apply(scope);
         var arg = this._arg;
-        if(arg.apply && this._method != 'assign') arg = arg.apply();
+        //special case for assign
+        if(this._method == 'assign') {
+            scope.setSymbol(arg.name,obj);
+            return obj;
+        }
+        if(arg.apply) arg = arg.apply(scope);
         return obj[this._method](arg);
     }
 };
-
-function reduceArray(arr) {
-    arr = arr.slice();
-    if(arr.length == 1) {
-        if(arr[0].type == 'FunctionCall') return arr[0].apply();
-        return arr[0];
-    }
-    var first = arr.shift();
-    first.apply(arr);
-    return reduceArray(arr);
-}
-
 
 module.exports = {
     Integer: Integer,
@@ -260,9 +275,10 @@ module.exports = {
     String: String,
     Symbol: Symbol,
     Block: Block,
-    reduceArray: reduceArray,
     WhileLoop: WhileLoop,
     IfCond: IfCond,
     MethodCall: MethodCall,
-    FunctionCall: FunctionCall
+    FunctionCall: FunctionCall,
+    FunctionDef: FunctionDef,
+    GlobalScope: Scope
 };

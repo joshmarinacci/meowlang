@@ -2,6 +2,7 @@
  * Created by josh on 5/25/16.
  */
 var Objects = require('./objects');
+var util = require('util')
 
 module.exports = {
     load: function(gram) {
@@ -52,6 +53,12 @@ module.exports = {
             Arguments: function (a) {
                 return a.asIteration().toAST();
             },
+            Parameters: function (a) {
+                return a.asIteration().toAST();
+            },
+            DefFun: function(_,ident,_,args,_,block) {
+                return Objects.FunctionDef.make(ident.toAST(), args.toAST(), block.toAST());
+            },
             Block: function (_1, b, _2) {
                 return Objects.Block.make(b.toAST());
             },
@@ -66,4 +73,4 @@ module.exports = {
             }
         });
     }
-}
+};
