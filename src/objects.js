@@ -81,7 +81,7 @@ class FunctionDef {
         this.params = params;
         this.body = body;
     }
-    apply() {
+    apply(scope) {
         //create a global function for this body
         var body = this.body;
         var params = this.params;
@@ -110,12 +110,11 @@ class WhileLoop {
         this.body = body;
     }
     apply(scope) {
-        var ret = null;
         while(true) {
             var condVal = this.cond.apply(scope);
             if (!condVal instanceof KLBoolean) throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
             if (condVal.isFalse()) break;
-            ret = this.body.apply(scope);
+            var ret = this.body.apply(scope);
         }
         return ret;
     }

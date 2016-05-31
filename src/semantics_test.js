@@ -49,7 +49,6 @@ function test(input, answer) {
     if(match.failed()) return console.log("input failed to match " + input + match.message);
     var result = sem(match).toAST();
     //console.log('result = ', JSON.stringify(result,null,' '), answer);
-    if(result instanceof Array) result = Objects.reduceArray(result);
     if(result.apply) result = result.apply(Objects.GlobalScope);
     if(result == null && answer == null) return console.log('success',input);
     assert(result.jsEquals(answer),true);
