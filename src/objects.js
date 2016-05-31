@@ -3,50 +3,37 @@
  * Created by josh on 5/23/16.
  */
 
-class KLInteger {
-    constructor(lit) {
-        this.val = lit;
-        this.type = 'KLInteger';
-    }
-    add(other) {              return new KLInteger(this.val + other.val);  }
-    multiply(other) {         return new KLInteger(this.val *  other.val); }
-    divide(other) {           return new KLInteger(this.val /  other.val); }
+class KLNumber {
+    apply() { return this;  }
+    add(other) {              return this.make(this.val +  other.val); }
+    multiply(other) {         return this.make(this.val *  other.val); }
+    divide(other) {           return this.make(this.val /  other.val); }
     lessThan(other) {         return new KLBoolean(this.val <  other.val); }
     lessThanEqual(other) {    return new KLBoolean(this.val <= other.val); }
     greaterThan(other) {      return new KLBoolean(this.val >  other.val); }
     greaterThanEqual(other) { return new KLBoolean(this.val >= other.val); }
-    equal(other) {    return new KLBoolean(this.val == other.val); }
-    notEqual(other) { return new KLBoolean(this.val != other.val); }
-    jsEquals(jsValue) { return this.val == jsValue; }
-    apply() { return this;  }
+    equal(other) {            return new KLBoolean(this.val == other.val); }
+    notEqual(other) {         return new KLBoolean(this.val != other.val); }
+    jsEquals(val)   {         return this.val === val; }
 }
 
-var Float = {
-    make: function(lit) {
-        var obj = { val: lit, type:'Float'};
-        Object.setPrototypeOf(obj, Float);
-        return obj;
-    },
-    add: function(other) {
-        return this.make(this.val + other.val);
-    },
-    multiply: function(other) {
-        return this.make(this.val * other.val);
-    },
-    divide: function(other) {
-        return this.make(this.val / other.val);
-    },
-    assign: function(sym) {
-        sym.val = this;
-        return sym;
-    },
-    jsEquals: function(jsValue) {
-        return this.val == jsValue;
-    },
-    apply: function() {
-        return this;
+class KLInteger extends KLNumber {
+    constructor(lit) {
+        super();
+        this.val = lit;
+        this.type = 'KLInteger';
     }
-};
+    make(val) {  return new KLInteger(val); }
+}
+
+class KLFloat extends KLNumber {
+    constructor(lit) {
+        super(lit);
+        this.val = lit;
+        this.type = 'KLFloat';
+    }
+    make(val) {  return new KLFloat(val); }
+}
 
 class KLBoolean {
     constructor(lit) {
@@ -216,7 +203,7 @@ var MethodCall = {
 
 module.exports = {
     KLInteger: KLInteger,
-    Float: Float,
+    KLFloat: KLFloat,
     KLBoolean: KLBoolean,
     KLString: KLString,
     Symbol: Symbol,

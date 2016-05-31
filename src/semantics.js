@@ -11,7 +11,7 @@ module.exports = {
                 return new Objects.KLInteger(parseInt(this.interval.contents, 10));
             },
             float: function (a, _, b) {
-                return Objects.Float.make(parseFloat(this.interval.contents, 10));
+                return new Objects.KLFloat(parseFloat(this.interval.contents, 10));
             },
             ident: function (a, b) {
                 return Objects.Symbol.make(this.interval.contents, null);
