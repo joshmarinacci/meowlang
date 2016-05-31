@@ -27,6 +27,7 @@
 * 367, added function def support
 * 314, convert Integer, Boolean and String to ES6 classes
 * 300, common base class for KLInteger and KLFloat
+* 292: more convert to ES6 classes
 */
 
 var ohm = require('ohm-js');

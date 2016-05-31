@@ -14,7 +14,7 @@ module.exports = {
                 return new Objects.KLFloat(parseFloat(this.interval.contents, 10));
             },
             ident: function (a, b) {
-                return Objects.Symbol.make(this.interval.contents, null);
+                return new Objects.KLSymbol(this.interval.contents, null);
             },
             str: function (a, text, b) {
                 return new Objects.KLString(text.interval.contents);

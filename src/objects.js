@@ -56,42 +56,34 @@ class KLString {
     apply() { return this; }
 }
 
-var Scope = {
-    storage: {},
-    makeSubScope: function() {
-        var ss = { storage: {} };
-        Object.setPrototypeOf(ss,Scope);
-        return ss;
-    },
-    hasSymbol: function(name) {
-        return this.storage[name]
-    },
-    setSymbol: function(name, obj) {
-        this.storage[name] = obj;
-    },
-    getSymbol: function(name) {
-        return this.storage[name];
-    },
-    dump: function() {
+class KLScope {
+    constructor() {
+        this.storage = {};
+    }
+    makeSubScope() {   return new KLScope()  }
+    hasSymbol(name) {  return this.storage[name] }
+    setSymbol(name, obj) {  this.storage[name] = obj; }
+    getSymbol(name) {  return this.storage[name];  }
+    dump() {
         console.log("scope: ");
         Object.keys(this.storage).forEach((name) => {
             console.log("   name = ",name, this.storage[name]);
         });
     }
-};
+}
+
+var GlobalScope = new KLScope();
 
 
-var Symbol = {
-    make: function(name) {
-        var obj = { name:name, type:'Symbol'};
-        Object.setPrototypeOf(obj, Symbol);
-        return obj;
-    },
-    apply: function(scope) {
+class KLSymbol {
+    constructor(name) {
+        this.name = name;
+        this.type = 'KLSymbol';
+    }
+    apply(scope) {
         return scope.getSymbol(this.name);
     }
-};
-
+}
 
 var FunctionDef = {
     make: function(sym, params, body){
@@ -105,7 +97,7 @@ var FunctionDef = {
         var params = this.params;
         GLOBAL[this.sym.name] = function() {
             var args = arguments;
-            var scope = Scope.makeSubScope();
+            var scope = GlobalScope.makeSubScope();
             params.forEach((param,i) => scope.setSymbol(param.name,args[i]));
             return body.apply(scope);
         }
@@ -206,12 +198,12 @@ module.exports = {
     KLFloat: KLFloat,
     KLBoolean: KLBoolean,
     KLString: KLString,
-    Symbol: Symbol,
+    KLSymbol: KLSymbol,
     Block: Block,
     WhileLoop: WhileLoop,
     IfCond: IfCond,
     MethodCall: MethodCall,
     FunctionCall: FunctionCall,
     FunctionDef: FunctionDef,
-    GlobalScope: Scope
+    GlobalScope: GlobalScope
 };
