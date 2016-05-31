@@ -8,7 +8,7 @@ module.exports = {
     load: function(gram) {
         return gram.semantics().addOperation('toAST', {
             int: function (a) {
-                return Objects.Integer.make(parseInt(this.interval.contents, 10));
+                return new Objects.KLInteger(parseInt(this.interval.contents, 10));
             },
             float: function (a, _, b) {
                 return Objects.Float.make(parseFloat(this.interval.contents, 10));

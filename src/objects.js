@@ -3,87 +3,45 @@
  * Created by josh on 5/23/16.
  */
 
-var Integer = {
-    make: function(lit) {
-        var obj = { _val: lit, type:'Integer'};
-        Object.setPrototypeOf(obj, Integer);
-        return obj;
-    },
-    withUnit: function(unit) {
-        return UnitInteger.make(this._val,unit);
-    },
-    add: function(other) {
-        return this.make(this._val + other._val);
-    },
-    multiply: function(other) {
-        return this.make(this._val * other._val);
-    },
-    divide: function(other) {
-        return this.make(this._val / other._val);
-    },
-    lessThan: function(other) {
-        return new KLBoolean(this._val < other._val);
-    },
-    lessThanEqual: function(other) {
-        return new KLBoolean(this._val <= other._val);
-    },
-    greaterThan: function(other) {
-        return new KLBoolean(this._val > other._val);
-    },
-    greaterThanEqual: function(other) {
-        return new KLBoolean(this._val >= other._val);
-    },
-    equal: function(other) {
-        return new KLBoolean(this._val == other._val);
-    },
-    notEqual: function(other) {
-        return new KLBoolean(this._val != other._val);
-    },
-    jsEquals: function(jsValue) {
-        return this._val == jsValue;
-    },
-    apply: function() {
-        return this;
+class KLInteger {
+    constructor(lit) {
+        this.val = lit;
+        this.type = 'KLInteger';
     }
-};
-
-var UnitInteger = {
-    make: function(lit, unit) {
-        var obj = { _val: lit, _unit: unit};
-        Object.setPrototypeOf(obj,UnitInteger);
-        return obj;
-    },
-    multiply: function(other) {
-        if(other._unit) {
-            return this.make(this._val * other._val, this._unit);
-        } else {
-            return this.make(this._val * other._val, this._unit);
-        }
-    }
-};
-Object.setPrototypeOf(UnitInteger, Integer);
+    add(other) {              return new KLInteger(this.val + other.val);  }
+    multiply(other) {         return new KLInteger(this.val *  other.val); }
+    divide(other) {           return new KLInteger(this.val /  other.val); }
+    lessThan(other) {         return new KLBoolean(this.val <  other.val); }
+    lessThanEqual(other) {    return new KLBoolean(this.val <= other.val); }
+    greaterThan(other) {      return new KLBoolean(this.val >  other.val); }
+    greaterThanEqual(other) { return new KLBoolean(this.val >= other.val); }
+    equal(other) {    return new KLBoolean(this.val == other.val); }
+    notEqual(other) { return new KLBoolean(this.val != other.val); }
+    jsEquals(jsValue) { return this.val == jsValue; }
+    apply() { return this;  }
+}
 
 var Float = {
     make: function(lit) {
-        var obj = { _val: lit, type:'Float'};
+        var obj = { val: lit, type:'Float'};
         Object.setPrototypeOf(obj, Float);
         return obj;
     },
     add: function(other) {
-        return this.make(this._val + other._val);
+        return this.make(this.val + other.val);
     },
     multiply: function(other) {
-        return this.make(this._val * other._val);
+        return this.make(this.val * other.val);
     },
     divide: function(other) {
-        return this.make(this._val / other._val);
+        return this.make(this.val / other.val);
     },
     assign: function(sym) {
-        sym._val = this;
+        sym.val = this;
         return sym;
     },
     jsEquals: function(jsValue) {
-        return this._val == jsValue;
+        return this.val == jsValue;
     },
     apply: function() {
         return this;
@@ -257,7 +215,7 @@ var MethodCall = {
 };
 
 module.exports = {
-    Integer: Integer,
+    KLInteger: KLInteger,
     Float: Float,
     KLBoolean: KLBoolean,
     KLString: KLString,

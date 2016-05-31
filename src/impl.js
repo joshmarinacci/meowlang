@@ -56,7 +56,7 @@ var Scope = {
 function test(a,b) {
     //console.log("a == ",a);
     if(a._type == 'SYMBOL') {
-        var value = a._val;
+        var value = a.val;
         return test(value,b);
     }
     if(a.jsEquals(b)) {
@@ -89,7 +89,7 @@ var FunMax = {
         return obj;
     },
     perform: function(a,b) {
-        if(a._val > b._val) return a;
+        if(a.val > b.val) return a;
         return b;
     }
 };
@@ -101,7 +101,7 @@ var FunPow = {
         return obj;
     },
     perform: function(a,b) {
-        var val =  Math.pow(a._val, b._val);
+        var val =  Math.pow(a.val, b.val);
         return Integer.make(val);
     }
 };
