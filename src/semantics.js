@@ -17,7 +17,7 @@ module.exports = {
                 return Objects.Symbol.make(this.interval.contents, null);
             },
             str: function (a, text, b) {
-                return Objects.String.make(text.interval.contents);
+                return new Objects.KLString(text.interval.contents);
             },
 
             AddExpr: function (a, _, b) {

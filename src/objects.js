@@ -100,22 +100,16 @@ class KLBoolean {
     isTrue() {  return this.val === true }
     apply () {  return this;  }
 }
-var String = {
-    make: function(lit) {
-        var obj = { _val:lit, type:'String' };
-        Object.setPrototypeOf(obj, String);
-        return obj;
-    },
-    add: function(other) {
-        return this.make(this._val + other._val);
-    },
-    jsEquals: function(jsValue) {
-        return this._val === jsValue;
-    },
-    apply: function() {
-        return this;
+
+class KLString {
+    constructor(list) {
+        this.val = list;
+        this.type = 'KLString';
     }
-};
+    add(other) { return new KLString(this.val + other.val); }
+    jsEquals(jsValue) {   return this.val === jsValue; }
+    apply() { return this; }
+}
 
 var Scope = {
     storage: {},
@@ -168,7 +162,6 @@ var FunctionDef = {
             var args = arguments;
             var scope = Scope.makeSubScope();
             params.forEach((param,i) => scope.setSymbol(param.name,args[i]));
-            scope.dump();
             return body.apply(scope);
         }
     }
@@ -220,7 +213,7 @@ var IfCond = {
 
 var GLOBAL = {
     print : function (arg) {
-        console.log('print:',arg._val);
+        console.log('print:',arg.val);
         return arg;
     },
     max: function(A,B) {
@@ -267,7 +260,7 @@ module.exports = {
     Integer: Integer,
     Float: Float,
     KLBoolean: KLBoolean,
-    String: String,
+    KLString: KLString,
     Symbol: Symbol,
     Block: Block,
     WhileLoop: WhileLoop,

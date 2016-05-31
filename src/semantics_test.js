@@ -25,6 +25,7 @@
 * LOC = 415, 354 lines of code
 * 346
 * 367, added function def support
+* 355, convert Boolean and String to ES6 classes
 */
 
 var ohm = require('ohm-js');
