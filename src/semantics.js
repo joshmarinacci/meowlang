@@ -21,34 +21,34 @@ module.exports = {
             },
 
             AddExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'add', b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'add', b.toAST());
             },
             MulExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'multiply', b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'multiply', b.toAST());
             },
             LtExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'lessThan',b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'lessThan',b.toAST());
             },
             LteExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'lessThanEqual',b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'lessThanEqual',b.toAST());
             },
             GtExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'greaterThan',b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'greaterThan',b.toAST());
             },
             GteExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'greaterThanEqual',b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'greaterThanEqual',b.toAST());
             },
             EqExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'equal',b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'equal',b.toAST());
             },
             NeExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'notEqual',b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'notEqual',b.toAST());
             },
             DefVar: function (_, ident) {
                 return ident.toAST();
             },
             FunCall: function (a, _1, b, _2) {
-                return Objects.FunctionCall.make(a.toAST(), b.toAST());
+                return new Objects.FunctionCall(a.toAST(), b.toAST());
             },
             Arguments: function (a) {
                 return a.asIteration().toAST();
@@ -57,19 +57,19 @@ module.exports = {
                 return a.asIteration().toAST();
             },
             DefFun: function(_,ident,_,args,_,block) {
-                return Objects.FunctionDef.make(ident.toAST(), args.toAST(), block.toAST());
+                return new Objects.FunctionDef(ident.toAST(), args.toAST(), block.toAST());
             },
             Block: function (_1, b, _2) {
-                return Objects.Block.make(b.toAST());
+                return new Objects.Block(b.toAST());
             },
             AssignExpr: function (a, _, b) {
-                return Objects.MethodCall.make(a.toAST(), 'assign',b.toAST());
+                return new Objects.MethodCall(a.toAST(), 'assign',b.toAST());
             },
             WhileExpr: function (_, a, b) {
-                return Objects.WhileLoop.make(a.toAST(), b.toAST());
+                return new Objects.WhileLoop(a.toAST(), b.toAST());
             },
             IfExpr: function (_, a, b) {
-                return Objects.IfCond.make(a.toAST(), b.toAST());
+                return new Objects.IfCond(a.toAST(), b.toAST());
             }
         });
     }

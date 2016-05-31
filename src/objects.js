@@ -62,7 +62,7 @@ class KLScope {
     }
     makeSubScope() {   return new KLScope()  }
     hasSymbol(name) {  return this.storage[name] }
-    setSymbol(name, obj) {  this.storage[name] = obj; }
+    setSymbol(name, obj) {  this.storage[name] = obj; return this.storage[name] }
     getSymbol(name) {  return this.storage[name];  }
     dump() {
         console.log("scope: ");
@@ -85,13 +85,14 @@ class KLSymbol {
     }
 }
 
-var FunctionDef = {
-    make: function(sym, params, body){
-        var obj = { sym: sym, type: 'FunctionDef', params: params, body: body};
-        Object.setPrototypeOf(obj, FunctionDef);
-        return obj;
-    },
-    apply: function() {
+class FunctionDef {
+    constructor(sym, params, body) {
+        this.sym = sym;
+        this.params = params;
+        this.body = body;
+        this.type = 'FunctionDef';
+    }
+    apply() {
         //create a global function for this body
         var body = this.body;
         var params = this.params;
@@ -104,25 +105,24 @@ var FunctionDef = {
     }
 };
 
-var Block = {
-    make: function (target) {
-        var obj = {_target: target, type: 'Block'};
-        Object.setPrototypeOf(obj, Block);
-        return obj;
-    },
-    apply: function(scope) {
-        var results = this._target.map((expr) => expr.apply(scope));
+class Block {
+    constructor(target) {
+        this.target = target;
+        this.type = 'Block';
+    }
+    apply(scope) {
+        var results = this.target.map((expr) => expr.apply(scope));
         return results.pop();
     }
-};
+}
 
-var WhileLoop = {
-    make: function(cond, body) {
-        var obj = { cond:cond, body:body, type:'WhileLoop'};
-        Object.setPrototypeOf(obj, WhileLoop);
-        return obj;
-    },
-    apply: function(scope) {
+class WhileLoop {
+    constructor(cond, body) {
+        this.cond = cond;
+        this.body = body;
+        this.type = 'WhileLoop';
+    }
+    apply(scope) {
         var ret = null;
         while(true) {
             var condVal = this.cond.apply(scope);
@@ -132,21 +132,21 @@ var WhileLoop = {
         }
         return ret;
     }
-};
+}
 
-var IfCond = {
-    make: function(cond, body) {
-        var obj = { cond:cond, body:body, type:'IfCond'};
-        Object.setPrototypeOf(obj, IfCond);
-        return obj;
-    },
-    apply: function(scope) {
+class IfCond {
+    constructor(cond, body) {
+        this.cond = cond;
+        this.body = body;
+        this.type = 'IfCond';
+    }
+    apply(scope) {
         var val = this.cond.apply(scope);
         if (val.type != 'KLBoolean') throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
         if (val.isTrue()) return this.body.apply(scope);
         return new KLBoolean(false);
     }
-};
+}
 
 var GLOBAL = {
     print : function (arg) {
@@ -159,39 +159,33 @@ var GLOBAL = {
     }
 };
 
-var FunctionCall = {
-    make: function(funName, argObj) {
-        var obj = { _arg: argObj, type:'FunctionCall', _method:funName};
-        Object.setPrototypeOf(obj, FunctionCall);
-        return obj;
-    },
-    apply: function(scope) {
-        var mname = this._method;
-        var args = this._arg;
+class FunctionCall {
+    constructor(funName, argObj) {
+        this.method = funName;
+        this.arg = argObj;
+        this.type = 'FunctionCall';
+    }
+    apply(scope) {
+        var args = this.arg;
         if(args instanceof Array) args = args.map((arg) => arg.apply(scope));
-        return GLOBAL[mname.name].apply(null,args);
+        return GLOBAL[this.method.name].apply(null,args);
     }
 };
 
-var MethodCall = {
-    make: function(target, methodName, arg) {
-        var obj = { _target: target, type:'MethodCall', _method:methodName, _arg:arg};
-        Object.setPrototypeOf(obj, MethodCall);
-        return obj;
-    },
-    apply: function(scope) {
-        var obj = this._target;
-        if(obj.apply) obj = obj.apply(scope);
-        var arg = this._arg;
-        //special case for assign
-        if(this._method == 'assign') {
-            scope.setSymbol(arg.name,obj);
-            return obj;
-        }
-        if(arg.apply) arg = arg.apply(scope);
-        return obj[this._method](arg);
+class MethodCall {
+    constructor(target, methodName, arg) {
+        this.target = target;
+        this.method = methodName;
+        this.arg = arg;
+        this.type = 'MethodCall';
     }
-};
+    apply(scope) {
+        var obj = this.target.apply(scope);
+        //special case for assign
+        if(this.method == 'assign') return scope.setSymbol(this.arg.name,obj);
+        return obj[this.method](this.arg.apply(scope));
+    }
+}
 
 module.exports = {
     KLInteger: KLInteger,
