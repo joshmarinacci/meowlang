@@ -1,3 +1,4 @@
+"use strict";
 /**
  * Created by josh on 5/23/16.
  */
@@ -21,22 +22,22 @@ var Integer = {
         return this.make(this._val / other._val);
     },
     lessThan: function(other) {
-        return Boolean.make(this._val < other._val);
+        return new KLBoolean(this._val < other._val);
     },
     lessThanEqual: function(other) {
-        return Boolean.make(this._val <= other._val);
+        return new KLBoolean(this._val <= other._val);
     },
     greaterThan: function(other) {
-        return Boolean.make(this._val > other._val);
+        return new KLBoolean(this._val > other._val);
     },
     greaterThanEqual: function(other) {
-        return Boolean.make(this._val >= other._val);
+        return new KLBoolean(this._val >= other._val);
     },
     equal: function(other) {
-        return Boolean.make(this._val == other._val);
+        return new KLBoolean(this._val == other._val);
     },
     notEqual: function(other) {
-        return Boolean.make(this._val != other._val);
+        return new KLBoolean(this._val != other._val);
     },
     jsEquals: function(jsValue) {
         return this._val == jsValue;
@@ -89,22 +90,16 @@ var Float = {
     }
 };
 
-var Boolean = {
-    make: function(lit) {
-        var obj = {
-            _val:lit, type:'Boolean'
-        };
-        Object.setPrototypeOf(obj, Boolean);
-        return obj;
-    },
-    jsEquals: function(jsValue) {
-        return this._val === jsValue;
-    },
-    apply: function() {
-        return this;
+class KLBoolean {
+    constructor(lit) {
+        this.val = lit;
+        this.type = 'KLBoolean';
     }
-};
-
+    jsEquals (jsValue) { return this.val === jsValue;  }
+    isFalse() { return this.val === false }
+    isTrue() {  return this.val === true }
+    apply () {  return this;  }
+}
 var String = {
     make: function(lit) {
         var obj = { _val:lit, type:'String' };
@@ -201,8 +196,8 @@ var WhileLoop = {
         var ret = null;
         while(true) {
             var condVal = this.cond.apply(scope);
-            if (condVal.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
-            if (condVal._val == false) break;
+            if (condVal.type != 'KLBoolean') throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
+            if (condVal.isFalse()) break;
             ret = this.body.apply(scope);
         }
         return ret;
@@ -217,9 +212,9 @@ var IfCond = {
     },
     apply: function(scope) {
         var val = this.cond.apply(scope);
-        if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
-        if (val._val == true) return this.body.apply(scope);
-        return Boolean.make(false);
+        if (val.type != 'KLBoolean') throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
+        if (val.isTrue()) return this.body.apply(scope);
+        return new KLBoolean(false);
     }
 };
 
@@ -271,7 +266,7 @@ var MethodCall = {
 module.exports = {
     Integer: Integer,
     Float: Float,
-    Boolean: Boolean,
+    KLBoolean: KLBoolean,
     String: String,
     Symbol: Symbol,
     Block: Block,

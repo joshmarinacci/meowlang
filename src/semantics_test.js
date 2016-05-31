@@ -21,7 +21,7 @@
 *
 * what will the AST look like for chained methods vs explicit methods
 * fold function calls and method calls into one? methods on a global object?
-**
+*
 * LOC = 415, 354 lines of code
 * 346
 * 367, added function def support
