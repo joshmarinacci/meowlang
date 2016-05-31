@@ -1,7 +1,4 @@
 "use strict";
-/**
- * Created by josh on 5/23/16.
- */
 
 class KLNumber {
     apply() { return this;  }
@@ -75,9 +72,7 @@ class KLSymbol {
     constructor(name) {
         this.name = name;
     }
-    apply(scope) {
-        return scope.getSymbol(this.name);
-    }
+    apply(scope) {  return scope.getSymbol(this.name);  }
 }
 
 class FunctionDef {
@@ -97,7 +92,7 @@ class FunctionDef {
             return body.apply(scope);
         }
     }
-};
+}
 
 class Block {
     constructor(target) {
@@ -160,7 +155,7 @@ class FunctionCall {
         if(args instanceof Array) args = args.map((arg) => arg.apply(scope));
         return GLOBAL[this.method.name].apply(null,args);
     }
-};
+}
 
 class MethodCall {
     constructor(target, methodName, arg) {

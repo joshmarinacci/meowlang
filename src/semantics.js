@@ -1,8 +1,4 @@
-/**
- * Created by josh on 5/25/16.
- */
 var Objects = require('./objects');
-var util = require('util')
 
 module.exports = {
     load: function(gram) {
