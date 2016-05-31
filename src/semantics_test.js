@@ -29,6 +29,8 @@
 * 300, common base class for KLInteger and KLFloat
 * 292: more convert to ES6 classes
 * 286: more convert to ES6 classes
+* 275: remove extra type parameters
+* 233: reformat
 */
 
 var ohm = require('ohm-js');

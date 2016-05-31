@@ -21,7 +21,6 @@ class KLInteger extends KLNumber {
     constructor(lit) {
         super();
         this.val = lit;
-        this.type = 'KLInteger';
     }
     make(val) {  return new KLInteger(val); }
 }
@@ -30,7 +29,6 @@ class KLFloat extends KLNumber {
     constructor(lit) {
         super(lit);
         this.val = lit;
-        this.type = 'KLFloat';
     }
     make(val) {  return new KLFloat(val); }
 }
@@ -38,7 +36,6 @@ class KLFloat extends KLNumber {
 class KLBoolean {
     constructor(lit) {
         this.val = lit;
-        this.type = 'KLBoolean';
     }
     jsEquals (jsValue) { return this.val === jsValue;  }
     isFalse() { return this.val === false }
@@ -49,7 +46,6 @@ class KLBoolean {
 class KLString {
     constructor(list) {
         this.val = list;
-        this.type = 'KLString';
     }
     add(other) { return new KLString(this.val + other.val); }
     jsEquals(jsValue) {   return this.val === jsValue; }
@@ -78,7 +74,6 @@ var GlobalScope = new KLScope();
 class KLSymbol {
     constructor(name) {
         this.name = name;
-        this.type = 'KLSymbol';
     }
     apply(scope) {
         return scope.getSymbol(this.name);
@@ -90,7 +85,6 @@ class FunctionDef {
         this.sym = sym;
         this.params = params;
         this.body = body;
-        this.type = 'FunctionDef';
     }
     apply() {
         //create a global function for this body
@@ -108,7 +102,6 @@ class FunctionDef {
 class Block {
     constructor(target) {
         this.target = target;
-        this.type = 'Block';
     }
     apply(scope) {
         var results = this.target.map((expr) => expr.apply(scope));
@@ -120,13 +113,12 @@ class WhileLoop {
     constructor(cond, body) {
         this.cond = cond;
         this.body = body;
-        this.type = 'WhileLoop';
     }
     apply(scope) {
         var ret = null;
         while(true) {
             var condVal = this.cond.apply(scope);
-            if (condVal.type != 'KLBoolean') throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
+            if (!condVal instanceof KLBoolean) throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
             if (condVal.isFalse()) break;
             ret = this.body.apply(scope);
         }
@@ -138,11 +130,10 @@ class IfCond {
     constructor(cond, body) {
         this.cond = cond;
         this.body = body;
-        this.type = 'IfCond';
     }
     apply(scope) {
         var val = this.cond.apply(scope);
-        if (val.type != 'KLBoolean') throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
+        if (! (val instanceof  KLBoolean)) throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
         if (val.isTrue()) return this.body.apply(scope);
         return new KLBoolean(false);
     }
@@ -163,7 +154,6 @@ class FunctionCall {
     constructor(funName, argObj) {
         this.method = funName;
         this.arg = argObj;
-        this.type = 'FunctionCall';
     }
     apply(scope) {
         var args = this.arg;
@@ -177,7 +167,6 @@ class MethodCall {
         this.target = target;
         this.method = methodName;
         this.arg = arg;
-        this.type = 'MethodCall';
     }
     apply(scope) {
         var obj = this.target.apply(scope);
