@@ -1,9 +1,11 @@
 var fs = require('fs');
 
 var paths = [
-    'src/semantics.js',
-    'src/objects.js',
-    'src/grammar3.ohm'
+    'meow_procedural/grammar.ohm',
+    'meow_procedural/objects.js',
+    'meow_procedural/semantics.js',
+    //'src/objects.js',
+    //'src/grammar3.ohm'
 ];
 var total = 0;
 paths.forEach((path) => total += countFile(path) );

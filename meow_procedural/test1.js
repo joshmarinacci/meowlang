@@ -7,19 +7,16 @@ var ohm = require('ohm-js');
 var fs = require('fs');
 var assert = require('assert');
 var path = require('path');
-//var Objects = require('./objects');
-//var Semantics = require('./semantics');
+var MO = require('./objects');
+var MNumber = MO.MNumber;
+var MBoolean = MO.MBoolean;
+var MString = MO.MString;
+var BinaryOp = MO.BinaryOp;
+var MScope = MO.MScope;
+var MSymbol = MO.MSymbol;
+var Semantics = require('./semantics');
 
 /*
-procedural version should support creating variables, arithmetic, user defined
-functions with parameters using blocks
-left right precedence
-arrow assignment operator
-built in print function
-if/then/else using blocks
-
-
-
 //multiply the arguments
 def times(x,y,z) {
     return x * y * z
@@ -34,7 +31,6 @@ def factorial(n) {
    }
 }
 
-
 print("times of 1,2, and 3 is ", sum(1,2,3))
 
 def x;
@@ -48,242 +44,6 @@ eliminate extra conditionals and the math we don't use?
 //load the grammar
 var gram = ohm.grammar(fs.readFileSync(path.join(__dirname,'grammar.ohm')).toString());
 
-function log() {
-    console.log.apply(console,arguments);
-}
-
-class MNumber {
-    constructor(val) {
-        this.val = val;
-    }
-    resolve(scope) {
-        return this;
-    }
-    jsEquals(jsval) {
-        return this.val == jsval;
-    }
-}
-
-class MBoolean {
-    constructor(val) {
-        this.val = val;
-    }
-    resolve(scope) {
-        return this;
-    }
-    jsEquals(jsval) {
-        return this.val == jsval;
-    }
-}
-
-class MString {
-    constructor(val) {
-        this.val = val;
-    }
-    resolve(scope) {
-        return this;
-    }
-    jsEquals(jsval) {
-        return this.val == jsval;
-    }
-}
-
-class BinaryOp {
-    constructor(op, A, B) {
-        this.op = op;
-        this.A = A;
-        this.B = B;
-    }
-    resolve(scope) {
-        var a = this.A.resolve(scope).val;
-        var b = this.B.resolve(scope).val;
-        if(this.op == 'add') return new MNumber(a+b);
-        if(this.op == 'mul') return new MNumber(a*b);
-        if(this.op == 'lt')  return new MBoolean(a<b);
-        if(this.op == 'gt')  return new MBoolean(a>b);
-        if(this.op == 'lte')  return new MBoolean(a<=b);
-        if(this.op == 'gte')  return new MBoolean(a>=b);
-        if(this.op == 'eq')  return new MBoolean(a==b);
-        if(this.op == 'neq')  return new MBoolean(a!=b);
-    }
-}
-
-
-class MScope {
-    constructor(parent) {
-        this.storage = {};
-        this.parent = parent?parent:null;
-    }
-    makeSubScope() {   return new MScope(this)  }
-    hasSymbol(name) {  return this.getSymbol(name) != null }
-    setSymbol(name, obj) {  this.storage[name] = obj; return this.storage[name] }
-    getSymbol(name) {
-        if(this.storage[name]) return this.storage[name];
-        if(this.parent) return this.parent.getSymbol(name);
-        return null;
-    }
-    dump() {
-        console.log("scope: ");
-        Object.keys(this.storage).forEach((name) => {
-            console.log("   name = ",name, this.storage[name]);
-        });
-    }
-}
-
-class MSymbol {
-    constructor(name) {
-        this.name = name;
-    }
-    resolve(scope) {
-        var val =  scope.getSymbol(this.name);
-        return val;
-    }
-}
-
-class MAssignment {
-    constructor(value, sym) {
-        this.symbol = sym;
-        this.value = value;
-    }
-    resolve(scope) {
-        return scope.setSymbol(this.symbol.name, this.value.resolve(scope));
-    }
-}
-
-class MBlock {
-    constructor(block) {
-        this.statements = block;
-    }
-    resolve(scope) {
-        var vals = this.statements.map(function(expr) {
-            return expr.resolve(scope);
-        });
-        return vals.pop();
-    }
-}
-
-
-class MFunctionCall {
-    constructor(fun, argObj) {
-        this.fun = fun;
-        this.arg = argObj;
-    }
-    resolve(scope) {
-        var args = this.arg;
-        if(args instanceof Array) args = args.map((arg) => arg.resolve(scope));
-        if(!scope.hasSymbol(this.fun.name)) throw new Error("cannot resolve symbol " + this.fun.name);
-        var fun = scope.getSymbol(this.fun.name);
-        return fun.apply(null,args);
-    }
-}
-
-class MIfCond {
-    constructor(cond, thenBody, elseBody) {
-        this.cond = cond;
-        this.thenBody = thenBody;
-        this.elseBody = elseBody;
-    }
-    resolve(scope) {
-        var val = this.cond.resolve(scope);
-        if (val.val == true) {
-            return this.thenBody.resolve(scope);
-        }
-        if(this.elseBody) return this.elseBody.resolve(scope);
-        return new MBoolean(false);
-    }
-}
-
-class MFunctionDef {
-    constructor(sym, params, body) {
-        this.sym = sym;
-        this.params = params;
-        this.body = body;
-    }
-    resolve(scope) {
-        //create a global function for this body
-        var body = this.body;
-        var params = this.params;
-        scope.setSymbol(this.sym.name,function() {
-            var args = arguments;
-            var scope2 = scope.makeSubScope();
-            params.forEach((param,i) => scope2.setSymbol(param.name,args[i]));
-            return body.resolve(scope2);
-        });
-    }
-}
-
-
-var sem = gram.semantics().addOperation('toAST', {
-    int: function (a) {
-        return new MNumber(parseInt(this.interval.contents, 10));
-    },
-    float: function (a,_,b) {
-        return new MNumber(parseFloat(this.interval.contents, 10));
-    },
-    str:   function (a, text, b) {
-        return new MString(text.interval.contents);
-    },
-
-    ident: function (a, b) {
-        return new MSymbol(this.interval.contents, null);
-    },
-
-    AddExpr: function (a, _, b) {
-        return new BinaryOp('add', a.toAST(), b.toAST());
-    },
-    MulExpr: function (a, _, b) {
-        return new BinaryOp('mul', a.toAST(), b.toAST());
-    },
-    LtExpr: function(a, _, b) {
-        return new BinaryOp('lt', a.toAST(), b.toAST());
-    },
-    GtExpr: function(a, _, b) {
-        return new BinaryOp('gt', a.toAST(), b.toAST());
-    },
-    LteExpr: function(a, _, b) {
-        return new BinaryOp('lte', a.toAST(), b.toAST());
-    },
-    GteExpr: function(a, _, b) {
-        return new BinaryOp('gte', a.toAST(), b.toAST());
-    },
-    EqExpr: function(a, _, b) {
-        return new BinaryOp('eq', a.toAST(), b.toAST());
-    },
-    NeqExpr: function(a, _, b) {
-        return new BinaryOp('neq', a.toAST(), b.toAST());
-    },
-    DefVar: function (_, ident) {
-        return ident.toAST();
-    },
-    AssignExpr: function (a, _, b) {
-        return new MAssignment(a.toAST(), b.toAST());
-    },
-
-    Block: function(_, body, _1) {
-        return new MBlock(body.toAST());
-    },
-
-    FunCall: function (a, _1, b, _2) {
-        return new MFunctionCall(a.toAST(), b.toAST());
-    },
-    Arguments: function (a) {
-        return a.asIteration().toAST();
-    },
-    Parameters: function (a) {
-        return a.asIteration().toAST();
-    },
-    IfExpr: function (_, a, tb, _1, eb) {
-        var cond = a.toAST();
-        var thenBody = tb.toAST();
-        var elseBody = eb?eb.toAST()[0]:null;
-        return new MIfCond(cond, thenBody, elseBody);
-    },
-    DefFun: function(_1,ident,_2,args,_3,block) {
-        return new MFunctionDef(ident.toAST(), args.toAST(), block.toAST());
-    }
-});
-
-
 var globalScope = new MScope();
 globalScope.setSymbol("print",function(arg1){
     console.log("print:",arg1);
@@ -293,6 +53,8 @@ globalScope.setSymbol("max", function(A,B) {
     if(A.val > B.val) return A;
     return B;
 });
+
+var sem = Semantics.load(gram);
 function test(input, answer) {
     var match = gram.match(input);
     if(match.failed()) return console.log("input failed to match " + input + match.message);
