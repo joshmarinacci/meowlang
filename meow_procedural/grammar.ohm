@@ -1,0 +1,53 @@
+MeowLang {
+    //start of all parsing
+    Expr = Group | MathOp | FunCall | DefFun | DefVar | AssignExpr | Block | WhileExpr | IfExpr | TermExpr
+
+    // a terminal expression: function call or literal or symbol
+    TermExpr = FunCall | lit | ident
+
+    // all binary operations: arithmetic and conditionals
+    MathOp = MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr
+    AddExpr = Expr "+" TermExpr
+    SubExpr = Expr "-" TermExpr
+    MulExpr = Expr "*" TermExpr
+    DivExpr = Expr "/" TermExpr
+    EqExpr  = Expr "==" Expr
+    NeExpr  = Expr "!=" Expr
+    LtExpr  = Expr "<"  Expr
+    LteExpr = Expr "<=" Expr
+    GtExpr  = Expr ">"  Expr
+    GteExpr = Expr ">=" Expr
+
+    // assignment
+    AssignExpr = Expr "->" ident
+
+    //grouping and conditions
+    Group = "(" Expr ")"
+    Block = "{" Expr* "}"
+    WhileExpr = "while" Block Block
+    IfExpr    = "if" Block Block
+
+
+    //function calls and variables
+    FunCall = ident "(" Arguments ")"
+    Arguments = ListOf<Expr, ",">
+    DefVar  = "def" ident
+    DefFun  = "def" ident "(" Parameters ")" Block
+    Parameters = ListOf<ident, ",">
+
+    //various literals
+    lit = float | int | str
+    int = digit+
+    qq = "\""
+    str = qq (~qq any)+ qq
+    float = digit* "." digit+
+
+    //definition of a symbol
+    ident = letter (letter|digit)*
+
+    // override space to include slash slash comments
+    // real version needs to support various unicode whitespace forms
+    space := "\t" | " " | "\n" | comment
+    comment = "//" (~"\n" any)*
+
+}
