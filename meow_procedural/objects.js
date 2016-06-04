@@ -1,15 +1,9 @@
 "use strict";
 
 class Atom {
-    constructor(val) {
-        this.val = val;
-    }
-    resolve(scope) {
-        return this;
-    }
-    jsEquals(jsval) {
-        return this.val == jsval;
-    }
+    constructor(val) { this.val = val; }
+    resolve(scope)   { return this; }
+    jsEquals(jsval)  { return this.val == jsval; }
 }
 class MNumber extends Atom {}
 class MBoolean extends Atom {}
@@ -143,7 +137,6 @@ class MFunctionDef {
         });
     }
 }
-
 
 module.exports = {
     MNumber: MNumber,
