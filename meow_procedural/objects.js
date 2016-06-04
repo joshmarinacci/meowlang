@@ -29,7 +29,7 @@ class BinaryOp {
     }
 }
 
-class MBlock {
+class Block {
     constructor(block) {
         this.statements = block;
     }
@@ -40,7 +40,7 @@ class MBlock {
     }
 }
 
-class MIfCond {
+class IfCond {
     constructor(cond, thenBody, elseBody) {
         this.cond = cond;
         this.thenBody = thenBody;
@@ -57,26 +57,18 @@ class MIfCond {
 }
 
 
-
-
-class MScope {
+class Scope {
     constructor(parent) {
         this.storage = {};
         this.parent = parent?parent:null;
     }
-    makeSubScope() {   return new MScope(this)  }
+    makeSubScope() {   return new Scope(this)  }
     hasSymbol(name) {  return this.getSymbol(name) != null }
     setSymbol(name, obj) {  this.storage[name] = obj; return this.storage[name] }
     getSymbol(name) {
         if(this.storage[name]) return this.storage[name];
         if(this.parent) return this.parent.getSymbol(name);
         return null;
-    }
-    dump() {
-        console.log("scope: ");
-        Object.keys(this.storage).forEach((name) => {
-            console.log("   name = ",name, this.storage[name]);
-        });
     }
 }
 
@@ -92,17 +84,17 @@ class MSymbol {
 
 
 
-class MAssignment {
-    constructor(value, sym) {
+class Assignment {
+    constructor(val, sym) {
         this.symbol = sym;
-        this.value = value;
+        this.val = val;
     }
     resolve(scope) {
-        return scope.setSymbol(this.symbol.name, this.value.resolve(scope));
+        return scope.setSymbol(this.symbol.name, this.val.resolve(scope));
     }
 }
 
-class MFunctionCall {
+class FunctionCall {
     constructor(fun, args) {
         this.fun = fun;
         this.args = args;
@@ -119,7 +111,7 @@ class MFunctionCall {
 }
 
 
-class MFunctionDef {
+class FunctionDef {
     constructor(sym, params, body) {
         this.sym = sym;
         this.params = params;
@@ -129,7 +121,7 @@ class MFunctionDef {
         //create a global function for this body
         var body = this.body;
         var params = this.params;
-        scope.setSymbol(this.sym.name,function() {
+        return scope.setSymbol(this.sym.name,function() {
             var args = arguments;
             var scope2 = scope.makeSubScope();
             params.forEach((param,i) => scope2.setSymbol(param.name,args[i]));
@@ -144,10 +136,10 @@ module.exports = {
     MString: MString,
     BinaryOp: BinaryOp,
     MSymbol: MSymbol,
-    MScope: MScope,
-    MBlock: MBlock,
-    MIfCond: MIfCond,
-    MAssignment: MAssignment,
-    MFunctionCall: MFunctionCall,
-    MFunctionDef: MFunctionDef
+    Scope: Scope,
+    Block: Block,
+    IfCond: IfCond,
+    Assignment: Assignment,
+    FunctionCall: FunctionCall,
+    FunctionDef: FunctionDef
 };

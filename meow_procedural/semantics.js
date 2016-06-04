@@ -21,19 +21,19 @@ var operation = {
     NeqExpr: (a, _, b) => binop('neq',a,b),
 
     DefVar:     (_, ident) => ident.toAST(),
-    AssignExpr: (a, _, b)  => new MO.MAssignment(a.toAST(), b.toAST()),
+    AssignExpr: (a, _, b)  => new MO.Assignment(a.toAST(), b.toAST()),
 
-    Block: (_, body, _1) => new MO.MBlock(body.toAST()),
+    Block: (_, body, _1) => new MO.Block(body.toAST()),
     IfExpr: function (_, cond, tb, _1, eb) {
         var thenBody = tb.toAST();
         var elseBody = eb ? eb.toAST()[0] : null;
-        return new MO.MIfCond(cond.toAST(), thenBody, elseBody);
+        return new MO.IfCond(cond.toAST(), thenBody, elseBody);
     },
 
-    FunCall: (a,_1,b,_2) => new MO.MFunctionCall(a.toAST(), b.toAST()),
+    FunCall: (a,_1,b,_2) => new MO.FunctionCall(a.toAST(), b.toAST()),
     Arguments: (a) => a.asIteration().toAST(),
     Parameters: (a) => a.asIteration().toAST(),
-    DefFun: (_1, ident, _2, args, _3, block) => new MO.MFunctionDef(ident.toAST(), args.toAST(), block.toAST())
+    DefFun: (_1, ident, _2, args, _3, block) => new MO.FunctionDef(ident.toAST(), args.toAST(), block.toAST())
 };
 module.exports = {
     load: function (gram) {

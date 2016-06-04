@@ -7,13 +7,7 @@ var ohm = require('ohm-js');
 var fs = require('fs');
 var assert = require('assert');
 var path = require('path');
-var MO = require('./objects');
-var MNumber = MO.MNumber;
-var MBoolean = MO.MBoolean;
-var MString = MO.MString;
-var BinaryOp = MO.BinaryOp;
-var MScope = MO.MScope;
-var MSymbol = MO.MSymbol;
+var MObjects = require('./objects');
 var Semantics = require('./semantics');
 
 /*
@@ -44,7 +38,7 @@ eliminate extra conditionals and the math we don't use?
 //load the grammar
 var gram = ohm.grammar(fs.readFileSync(path.join(__dirname,'grammar.ohm')).toString());
 
-var globalScope = new MScope();
+var globalScope = new MObjects.Scope();
 globalScope.setSymbol("print",function(arg1){
     console.log("print:",arg1);
     return arg1;
