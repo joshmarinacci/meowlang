@@ -144,8 +144,21 @@ class MAssignment {
     }
     resolve(scope) {
         log("must assign value to name in the scope", this.symbol.name, this.value.resolve(scope));
-        scope.setSymbol(this.symbol.name, this.value.resolve(scope));
-        return this.value;
+        return scope.setSymbol(this.symbol.name, this.value.resolve(scope));
+    }
+}
+
+class MBlock {
+    constructor(block) {
+        this.statements = block;
+    }
+    resolve(scope) {
+        log("must resolve the expressions",this.statements);
+        var vals = this.statements.map(function(expr) {
+            log("  must resolve",expr);
+            return expr.resolve(scope);
+        });
+        return vals.pop();
     }
 }
 
@@ -194,6 +207,10 @@ var sem = gram.semantics().addOperation('toAST', {
     AssignExpr: function (a, _, b) {
         return new MAssignment(a.toAST(), b.toAST());
     },
+
+    Block: function(_, body, _1) {
+        return new MBlock(body.toAST());
+    }
 });
 
 
@@ -250,13 +267,12 @@ test('x',4);
 
 test('x+5',9);
 test('4+5 -> x',9);
-return;
 test('x+1',10);
-test('print(x)',9);
+//test('print(x)',9);
 
 //block
 test('{ 4+5 5+6 }',11);
-test('{ print("inside a block") 66 }',66);
+//test('{ print("inside a block") 66 }',66);
 
 //increment
 test("1 -> x",1);
@@ -270,11 +286,12 @@ test('{ x+1->x x+1->x}',5);
 test("1 -> x",1);
 
 //while should return the last result of the body block
-test('while { x <= 5 } { print(x) x+1->x }',6);
+//test('while { x <= 5 } { print(x) x+1->x }',6);
 //test the print function inside of a block
 //test an if condition with a print function and assignment
 
 test("1 -> x",1);
+return;
 test('if { x < 5 } { print("foo") x+1 -> x }', 2);
 
 
