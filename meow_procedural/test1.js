@@ -110,13 +110,18 @@ class BinaryOp {
 
 
 class MScope {
-    constructor() {
+    constructor(parent) {
         this.storage = {};
+        this.parent = parent?parent:null;
     }
-    makeSubScope() {   return new KLScope()  }
-    hasSymbol(name) {  return this.storage[name] }
+    makeSubScope() {   return new MScope(this)  }
+    hasSymbol(name) {  return this.getSymbol(name) != null }
     setSymbol(name, obj) {  this.storage[name] = obj; return this.storage[name] }
-    getSymbol(name) {  return this.storage[name];  }
+    getSymbol(name) {
+        if(this.storage[name]) return this.storage[name];
+        if(this.parent) return this.parent.getSymbol(name);
+        return null;
+    }
     dump() {
         console.log("scope: ");
         Object.keys(this.storage).forEach((name) => {
@@ -130,9 +135,7 @@ class MSymbol {
         this.name = name;
     }
     resolve(scope) {
-        log("must resolve from the scope",scope);
         var val =  scope.getSymbol(this.name);
-        log("value retrieved is", val);
         return val;
     }
 }
@@ -143,7 +146,6 @@ class MAssignment {
         this.value = value;
     }
     resolve(scope) {
-        log("must assign value to name in the scope", this.symbol.name, this.value.resolve(scope));
         return scope.setSymbol(this.symbol.name, this.value.resolve(scope));
     }
 }
@@ -153,9 +155,7 @@ class MBlock {
         this.statements = block;
     }
     resolve(scope) {
-        log("must resolve the expressions",this.statements);
         var vals = this.statements.map(function(expr) {
-            log("  must resolve",expr);
             return expr.resolve(scope);
         });
         return vals.pop();
@@ -171,10 +171,9 @@ class MFunctionCall {
     resolve(scope) {
         var args = this.arg;
         if(args instanceof Array) args = args.map((arg) => arg.resolve(scope));
+        if(!scope.hasSymbol(this.fun.name)) throw new Error("cannot resolve symbol " + this.fun.name);
         var fun = scope.getSymbol(this.fun.name);
-        console.log("the function is",fun);
         return fun.apply(null,args);
-        //return GLOBAL[this.fun.name].apply(null,args);
     }
 }
 
@@ -183,18 +182,33 @@ class MIfCond {
         this.cond = cond;
         this.thenBody = thenBody;
         this.elseBody = elseBody;
-        console.log("then body is", thenBody);
-        console.log("else body is", elseBody);
     }
     resolve(scope) {
         var val = this.cond.resolve(scope);
-        console.log('value of cond = ', val);
         if (val.val == true) {
             return this.thenBody.resolve(scope);
         }
-        console.log("else body = ", this.elseBody);
         if(this.elseBody) return this.elseBody.resolve(scope);
         return new MBoolean(false);
+    }
+}
+
+class MFunctionDef {
+    constructor(sym, params, body) {
+        this.sym = sym;
+        this.params = params;
+        this.body = body;
+    }
+    resolve(scope) {
+        //create a global function for this body
+        var body = this.body;
+        var params = this.params;
+        scope.setSymbol(this.sym.name,function() {
+            var args = arguments;
+            var scope2 = scope.makeSubScope();
+            params.forEach((param,i) => scope2.setSymbol(param.name,args[i]));
+            return body.resolve(scope2);
+        });
     }
 }
 
@@ -255,18 +269,24 @@ var sem = gram.semantics().addOperation('toAST', {
     Arguments: function (a) {
         return a.asIteration().toAST();
     },
+    Parameters: function (a) {
+        return a.asIteration().toAST();
+    },
     IfExpr: function (_, a, tb, _1, eb) {
         var cond = a.toAST();
         var thenBody = tb.toAST();
         var elseBody = eb?eb.toAST()[0]:null;
         return new MIfCond(cond, thenBody, elseBody);
+    },
+    DefFun: function(_1,ident,_2,args,_3,block) {
+        return new MFunctionDef(ident.toAST(), args.toAST(), block.toAST());
     }
 });
 
 
 var globalScope = new MScope();
 globalScope.setSymbol("print",function(arg1){
-    console.log("this is printing",arg1);
+    console.log("print:",arg1);
     return arg1;
 });
 globalScope.setSymbol("max", function(A,B) {
@@ -274,7 +294,6 @@ globalScope.setSymbol("max", function(A,B) {
     return B;
 });
 function test(input, answer) {
-    log("========");
     var match = gram.match(input);
     if(match.failed()) return console.log("input failed to match " + input + match.message);
     var result = sem(match).toAST();
@@ -362,7 +381,6 @@ test('4*max(5,4)',20);
 // function returns value to function
 test('max(4,max(6,5))',6);
 test('max(max(6,5),4)',6);
-return;
 
 test('{ def myFun()    { 1+2+3+4 } myFun()  }', 10);
 test('{ def myFun(x)   { 1+2+3+4 } myFun()  }', 10);
