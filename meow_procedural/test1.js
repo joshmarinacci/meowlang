@@ -162,6 +162,43 @@ class MBlock {
     }
 }
 
+
+class MFunctionCall {
+    constructor(fun, argObj) {
+        this.fun = fun;
+        this.arg = argObj;
+    }
+    resolve(scope) {
+        var args = this.arg;
+        if(args instanceof Array) args = args.map((arg) => arg.resolve(scope));
+        var fun = scope.getSymbol(this.fun.name);
+        console.log("the function is",fun);
+        return fun.apply(null,args);
+        //return GLOBAL[this.fun.name].apply(null,args);
+    }
+}
+
+class MIfCond {
+    constructor(cond, thenBody, elseBody) {
+        this.cond = cond;
+        this.thenBody = thenBody;
+        this.elseBody = elseBody;
+        console.log("then body is", thenBody);
+        console.log("else body is", elseBody);
+    }
+    resolve(scope) {
+        var val = this.cond.resolve(scope);
+        console.log('value of cond = ', val);
+        if (val.val == true) {
+            return this.thenBody.resolve(scope);
+        }
+        console.log("else body = ", this.elseBody);
+        if(this.elseBody) return this.elseBody.resolve(scope);
+        return new MBoolean(false);
+    }
+}
+
+
 var sem = gram.semantics().addOperation('toAST', {
     int: function (a) {
         return new MNumber(parseInt(this.interval.contents, 10));
@@ -210,12 +247,34 @@ var sem = gram.semantics().addOperation('toAST', {
 
     Block: function(_, body, _1) {
         return new MBlock(body.toAST());
+    },
+
+    FunCall: function (a, _1, b, _2) {
+        return new MFunctionCall(a.toAST(), b.toAST());
+    },
+    Arguments: function (a) {
+        return a.asIteration().toAST();
+    },
+    IfExpr: function (_, a, tb, _1, eb) {
+        var cond = a.toAST();
+        var thenBody = tb.toAST();
+        var elseBody = eb?eb.toAST()[0]:null;
+        return new MIfCond(cond, thenBody, elseBody);
     }
 });
 
 
 var globalScope = new MScope();
+globalScope.setSymbol("print",function(arg1){
+    console.log("this is printing",arg1);
+    return arg1;
+});
+globalScope.setSymbol("max", function(A,B) {
+    if(A.val > B.val) return A;
+    return B;
+});
 function test(input, answer) {
+    log("========");
     var match = gram.match(input);
     if(match.failed()) return console.log("input failed to match " + input + match.message);
     var result = sem(match).toAST();
@@ -251,13 +310,13 @@ test('4+5*2',18);
 test('4 + //6\n 5',9);
 
 //function calls
-//test("print(4)",4); //returns 4, prints 4
-//test("max(4,5)",5); // returns 5
+test("print(4)",4); //returns 4, prints 4
+test("max(4,5)",5); // returns 5
 
 //string literals
 test(' "foo" ',"foo");
 test(' "foo" + "bar" ', "foobar");
-//test('print("foo") ', 'foo');
+test('print("foo") ', 'foo');
 
 // variables
 test('x',null);
@@ -268,11 +327,11 @@ test('x',4);
 test('x+5',9);
 test('4+5 -> x',9);
 test('x+1',10);
-//test('print(x)',9);
+test('print(x)',9);
 
 //block
 test('{ 4+5 5+6 }',11);
-//test('{ print("inside a block") 66 }',66);
+test('{ print("inside a block") 66 }',66);
 
 //increment
 test("1 -> x",1);
@@ -291,17 +350,19 @@ test("1 -> x",1);
 //test an if condition with a print function and assignment
 
 test("1 -> x",1);
-return;
 test('if { x < 5 } { print("foo") x+1 -> x }', 2);
+test('if { x > 5 } { 17 } else { 18 }', 18);
 
 
 // compound tests
 // function returns value to math expression
 test('max(4,5)*6',30);
 test('4*max(4,5)',20);
+test('4*max(5,4)',20);
 // function returns value to function
 test('max(4,max(6,5))',6);
 test('max(max(6,5),4)',6);
+return;
 
 test('{ def myFun()    { 1+2+3+4 } myFun()  }', 10);
 test('{ def myFun(x)   { 1+2+3+4 } myFun()  }', 10);

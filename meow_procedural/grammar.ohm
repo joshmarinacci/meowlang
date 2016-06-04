@@ -25,7 +25,7 @@ MeowLang {
     Group = "(" Expr ")"
     Block = "{" Expr* "}"
     WhileExpr = "while" Block Block
-    IfExpr    = "if" Block Block
+    IfExpr    = "if" Block Block ("else" Block)?
 
 
     //function calls and variables
