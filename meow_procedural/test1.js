@@ -10,15 +10,142 @@ var path = require('path');
 //var Objects = require('./objects');
 //var Semantics = require('./semantics');
 
+/*
+procedural version should support creating variables, arithmetic, user defined
+functions with parameters using blocks
+left right precedence
+arrow assignment operator
+built in print function
+if/then/else using blocks
+
+
+
+//multiply the arguments
+def times(x,y,z) {
+    return x * y * z
+}
+
+//recursive definition of factorial
+def factorial(n) {
+   if(n == 1) {
+     1
+   } else {
+     factorial(n-1)*n
+   }
+}
+
+
+print("times of 1,2, and 3 is ", sum(1,2,3))
+
+def x;
+x = 3;
+print("factorial of 3 is",factorial(x))
+
+under 200 lines of code, is this possible?
+eliminate extra conditionals and the math we don't use?
+*/
+
 //load the grammar
 var gram = ohm.grammar(fs.readFileSync(path.join(__dirname,'grammar.ohm')).toString());
+
+function log() {
+    console.log.apply(console,arguments);
+}
 
 class MNumber {
     constructor(val) {
         this.val = val;
     }
+    resolve(scope) {
+        return this;
+    }
     jsEquals(jsval) {
         return this.val == jsval;
+    }
+}
+
+class MBoolean {
+    constructor(val) {
+        this.val = val;
+    }
+    resolve(scope) {
+        return this;
+    }
+    jsEquals(jsval) {
+        return this.val == jsval;
+    }
+}
+
+class MString {
+    constructor(val) {
+        this.val = val;
+    }
+    resolve(scope) {
+        return this;
+    }
+    jsEquals(jsval) {
+        return this.val == jsval;
+    }
+}
+
+class BinaryOp {
+    constructor(op, A, B) {
+        this.op = op;
+        this.A = A;
+        this.B = B;
+    }
+    resolve(scope) {
+        var a = this.A.resolve(scope).val;
+        var b = this.B.resolve(scope).val;
+        if(this.op == 'add') return new MNumber(a+b);
+        if(this.op == 'mul') return new MNumber(a*b);
+        if(this.op == 'lt')  return new MBoolean(a<b);
+        if(this.op == 'gt')  return new MBoolean(a>b);
+        if(this.op == 'lte')  return new MBoolean(a<=b);
+        if(this.op == 'gte')  return new MBoolean(a>=b);
+        if(this.op == 'eq')  return new MBoolean(a==b);
+        if(this.op == 'neq')  return new MBoolean(a!=b);
+    }
+}
+
+
+class MScope {
+    constructor() {
+        this.storage = {};
+    }
+    makeSubScope() {   return new KLScope()  }
+    hasSymbol(name) {  return this.storage[name] }
+    setSymbol(name, obj) {  this.storage[name] = obj; return this.storage[name] }
+    getSymbol(name) {  return this.storage[name];  }
+    dump() {
+        console.log("scope: ");
+        Object.keys(this.storage).forEach((name) => {
+            console.log("   name = ",name, this.storage[name]);
+        });
+    }
+}
+
+class MSymbol {
+    constructor(name) {
+        this.name = name;
+    }
+    resolve(scope) {
+        log("must resolve from the scope",scope);
+        var val =  scope.getSymbol(this.name);
+        log("value retrieved is", val);
+        return val;
+    }
+}
+
+class MAssignment {
+    constructor(value, sym) {
+        this.symbol = sym;
+        this.value = value;
+    }
+    resolve(scope) {
+        log("must assign value to name in the scope", this.symbol.name, this.value.resolve(scope));
+        scope.setSymbol(this.symbol.name, this.value.resolve(scope));
+        return this.value;
     }
 }
 
@@ -28,16 +155,57 @@ var sem = gram.semantics().addOperation('toAST', {
     },
     float: function (a,_,b) {
         return new MNumber(parseFloat(this.interval.contents, 10));
-    }
+    },
+    str:   function (a, text, b) {
+        return new MString(text.interval.contents);
+    },
+
+    ident: function (a, b) {
+        return new MSymbol(this.interval.contents, null);
+    },
+
+    AddExpr: function (a, _, b) {
+        return new BinaryOp('add', a.toAST(), b.toAST());
+    },
+    MulExpr: function (a, _, b) {
+        return new BinaryOp('mul', a.toAST(), b.toAST());
+    },
+    LtExpr: function(a, _, b) {
+        return new BinaryOp('lt', a.toAST(), b.toAST());
+    },
+    GtExpr: function(a, _, b) {
+        return new BinaryOp('gt', a.toAST(), b.toAST());
+    },
+    LteExpr: function(a, _, b) {
+        return new BinaryOp('lte', a.toAST(), b.toAST());
+    },
+    GteExpr: function(a, _, b) {
+        return new BinaryOp('gte', a.toAST(), b.toAST());
+    },
+    EqExpr: function(a, _, b) {
+        return new BinaryOp('eq', a.toAST(), b.toAST());
+    },
+    NeqExpr: function(a, _, b) {
+        return new BinaryOp('neq', a.toAST(), b.toAST());
+    },
+    DefVar: function (_, ident) {
+        return ident.toAST();
+    },
+    AssignExpr: function (a, _, b) {
+        return new MAssignment(a.toAST(), b.toAST());
+    },
 });
 
 
+var globalScope = new MScope();
 function test(input, answer) {
     var match = gram.match(input);
     if(match.failed()) return console.log("input failed to match " + input + match.message);
     var result = sem(match).toAST();
     //console.log('result = ', JSON.stringify(result,null,' '), answer);
-    if(result.apply) result = result.apply(Objects.GlobalScope);
+    result = result.resolve(globalScope);
+    //console.log('resolved = ', JSON.stringify(result,null,' '), answer);
+    ///if(result.apply) result = result.apply(Objects.GlobalScope);
     if(result == null && answer == null) return console.log('success',input);
     assert(result.jsEquals(answer),true);
     console.log('success',input);
@@ -45,7 +213,6 @@ function test(input, answer) {
 //literals
 test('4',4);
 test('4.5',4.5);
-return;
 
 //operators
 test('4+5',9);
@@ -67,21 +234,23 @@ test('4+5*2',18);
 test('4 + //6\n 5',9);
 
 //function calls
-test("print(4)",4); //returns 4, prints 4
-test("max(4,5)",5); // returns 5
+//test("print(4)",4); //returns 4, prints 4
+//test("max(4,5)",5); // returns 5
 
 //string literals
 test(' "foo" ',"foo");
 test(' "foo" + "bar" ', "foobar");
-test('print("foo") ', 'foo');
+//test('print("foo") ', 'foo');
 
 // variables
 test('x',null);
 test('def x',null);
 test("4 -> x",4);
+test('x',4);
 
 test('x+5',9);
 test('4+5 -> x',9);
+return;
 test('x+1',10);
 test('print(x)',9);
 

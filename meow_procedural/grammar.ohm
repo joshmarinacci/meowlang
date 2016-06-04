@@ -6,13 +6,13 @@ MeowLang {
     TermExpr = FunCall | lit | ident
 
     // all binary operations: arithmetic and conditionals
-    MathOp = MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr
+    MathOp = MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeqExpr
     AddExpr = Expr "+" TermExpr
     SubExpr = Expr "-" TermExpr
     MulExpr = Expr "*" TermExpr
     DivExpr = Expr "/" TermExpr
     EqExpr  = Expr "==" Expr
-    NeExpr  = Expr "!=" Expr
+    NeqExpr = Expr "!=" Expr
     LtExpr  = Expr "<"  Expr
     LteExpr = Expr "<=" Expr
     GtExpr  = Expr ">"  Expr
