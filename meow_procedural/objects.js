@@ -1,9 +1,6 @@
-"use strict"
+"use strict";
 
-/**
- * Created by josh on 6/4/16.
- */
-class MNumber {
+class Atom {
     constructor(val) {
         this.val = val;
     }
@@ -14,30 +11,9 @@ class MNumber {
         return this.val == jsval;
     }
 }
-
-class MBoolean {
-    constructor(val) {
-        this.val = val;
-    }
-    resolve(scope) {
-        return this;
-    }
-    jsEquals(jsval) {
-        return this.val == jsval;
-    }
-}
-
-class MString {
-    constructor(val) {
-        this.val = val;
-    }
-    resolve(scope) {
-        return this;
-    }
-    jsEquals(jsval) {
-        return this.val == jsval;
-    }
-}
+class MNumber extends Atom {}
+class MBoolean extends Atom {}
+class MString extends Atom {}
 
 class BinaryOp {
     constructor(op, A, B) {
@@ -52,10 +28,10 @@ class BinaryOp {
         if(this.op == 'mul') return new MNumber(a*b);
         if(this.op == 'lt')  return new MBoolean(a<b);
         if(this.op == 'gt')  return new MBoolean(a>b);
-        if(this.op == 'lte')  return new MBoolean(a<=b);
-        if(this.op == 'gte')  return new MBoolean(a>=b);
+        if(this.op == 'lte') return new MBoolean(a<=b);
+        if(this.op == 'gte') return new MBoolean(a>=b);
         if(this.op == 'eq')  return new MBoolean(a==b);
-        if(this.op == 'neq')  return new MBoolean(a!=b);
+        if(this.op == 'neq') return new MBoolean(a!=b);
     }
 }
 
@@ -64,9 +40,8 @@ class MBlock {
         this.statements = block;
     }
     resolve(scope) {
-        var vals = this.statements.map(function(expr) {
-            return expr.resolve(scope);
-        });
+        var vals = this.statements.map((expr) => expr.resolve(scope));
+        //only return the last one
         return vals.pop();
     }
 }
@@ -134,15 +109,17 @@ class MAssignment {
 }
 
 class MFunctionCall {
-    constructor(fun, argObj) {
+    constructor(fun, args) {
         this.fun = fun;
-        this.arg = argObj;
+        this.args = args;
     }
     resolve(scope) {
-        var args = this.arg;
-        if(args instanceof Array) args = args.map((arg) => arg.resolve(scope));
+        //lookup the real function from the symbol
         if(!scope.hasSymbol(this.fun.name)) throw new Error("cannot resolve symbol " + this.fun.name);
         var fun = scope.getSymbol(this.fun.name);
+        //resolve the args
+        var args = this.args.map((arg) => arg.resolve(scope));
+        //execute the function
         return fun.apply(null,args);
     }
 }
@@ -168,7 +145,6 @@ class MFunctionDef {
 }
 
 
-
 module.exports = {
     MNumber: MNumber,
     MBoolean: MBoolean,
@@ -181,5 +157,4 @@ module.exports = {
     MAssignment: MAssignment,
     MFunctionCall: MFunctionCall,
     MFunctionDef: MFunctionDef
-
 };
