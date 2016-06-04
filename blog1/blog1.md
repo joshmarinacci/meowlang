@@ -151,6 +151,7 @@ is not a period then it won't be a float at all, so 'int' will match instead.
 Now let's go look at our semantic actions again.  Since we now have new rules
 we need new action functions: one for int and one for float.
 
+```
 var toJS = grammar.semantics().addOperation('toJS', {
     Number: function(a) {
         return a.toJS();
@@ -164,6 +165,7 @@ var toJS = grammar.semantics().addOperation('toJS', {
         return parseFloat(this.interval.contents);
     }
 });
+```
 
 There's two things to note here. First, int and float adn Number all have matching
 grammar rules and functions. However, the action for Number doesn't really do anything
@@ -176,7 +178,9 @@ Second, int has one argument 'a' while float has three: 'a', 'b', and 'c'.  This
 because of the rule's arity. Arity means how many arguments a rule has. If we look
 back at the grammar the rule for 'float' is
 
+```
   float  = digit+ "." digit+
+```
 
 float is define by three parts, the first `digit+`, the `"."` and the second `digit+`. 
 We can read this as : a float is composed of three parts.  All three of those
@@ -188,12 +192,14 @@ compiler errors. Later on we will actually use some of these parameters.
 
 Now we can add a few more tests for our new floating point number support.
 
+```
 test("123",123);
 test("999",999);
 //test("abc",999);
 test('123.456',123.456);
 test('0.123',0.123);
 test('.123',0.123);
+```
 
 Note that the last test will fail. A floating point number must begin with a digit, even
 if it's just zero. .123 is not valid, and in fact the JavaScript language has the same rule.
@@ -252,8 +258,10 @@ comment it out. I put it in just so we can see what's really going on.
 
 Now we can add some more tests and see that our hex digits really work:
 
+```
 test('0x456',0x456);
 test('0xFF',255);
+```
 
 
 
@@ -300,14 +308,16 @@ actions you can use Ohm to actually process and calculate things.
 
 In the next article of this series I'll show you how to 
 not just parse numbers but actually evaluate math expressions like
-(4.8+5 * (238-68)/2), like a real calculator.
+`(4.8+5 * (238-68)/2)`, like a real calculator.
 
 Bonus challege: Can you extend the grammar with support for octal numbers? These
 are numbers in base 8 and can be represented with only the digits 0 to 7, preceeded
 by a zero and the letter `o`.  See if you are right with these test cases
 
+```
 test('0o77',7*8+7);
 test('0o23',0o23);
+```
 
 
 

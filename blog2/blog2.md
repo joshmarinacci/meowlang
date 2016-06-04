@@ -1,8 +1,9 @@
-last time I introduced Ohm, an open source meta language parser
+Last time [link] I introduced Ohm, an open source meta language parser
 with an easy to use syntax. We built a parser for various
 kinds of numbers.  This week we will extend the parser
 to calculate arithmetic expressions.
 
+```
   // just a basic integer
   Expr =  AddExpr
 
@@ -17,7 +18,7 @@ to calculate arithmetic expressions.
 
   PriExpr = "(" Expr ")" -- paren
           | Number
-
+```
 
 this is a bit complicated so let's break it down into pieces.
 expr can be an additive expression, an additive expression
@@ -30,15 +31,18 @@ an additive expression, and is AddExpr just the first line or all three lines?
 
 Ohm supports a compound syntax lets you define multiple rules at once.
 
+```
   AddExpr = AddExpr "+" MulExpr -- plus
           | AddExpr "-" MulExpr -- minus
           | MulExpr
-
+```
 is the same as
 
+```
 AddExpr        = AddExpr_plus | AddExpr_minus | MulExpr
 AddExpr_plus   = AddExpr "+" MulExpr
 AddExpr_minus  = AddExpr "-" MulExpr
+```
 
 In other words there are three forms of the add expression. Rather than having
 to break them out separately Ohm lets us combine them into a more compact
@@ -49,7 +53,9 @@ from the times and divide forms?  This comes down to operator precedence.
 
 Consider the following expression:
 
+```
 4 + 5 * 6
+```
 
 Do you evaluate the + or the * first? Which order we do the operators 
 affects the final answer. In many programming languages (including JavaScript)
@@ -58,12 +64,16 @@ defined operator precedence order. Usually multiplication and division
 come before addition and subtraction.  So the expression above is
 equivalent to 
 
+```
 4 + (5*6)
+```
 
 However, some programming languages, like Smalltalk evaulate operators
 left to right. So the expression above would be equivalent to:
 
+```
 (4+5) * 6
+```
 
 For this calculator we will go with the javaScript form. So now we must group
 the mulpication and division together and make sure they are executed before
@@ -72,7 +82,9 @@ contains MulExpr, and MulExpr contains the PriExpr. Only in PriExpr do we get
 to actual numbers.   This seems backwards, but we need to consider how things
 will be evaluated.  4 + 5 * 6 will be parsed into this:
 
+```
 Add(4, Mul(5,6))
+```
 
 The inner most expression is evaluated first, so the MulExpr must be closest
 to Number.  Adds will be evaulated only after all Mul's are done.

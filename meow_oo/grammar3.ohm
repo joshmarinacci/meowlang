@@ -1,5 +1,5 @@
 JoshLang {
-  Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr | FunCall | DefVar | AssignExpr | Block | WhileExpr | IfExpr | TermExpr
+  Expr = Group | MulExpr | DivExpr | AddExpr | SubExpr | LtExpr | LteExpr | GtExpr | GteExpr | EqExpr | NeExpr | FunCall | DefFun | DefVar | AssignExpr | Block | WhileExpr | IfExpr | TermExpr
   TermExpr = FunCall | lit | ident
   AddExpr = Expr "+" TermExpr
   SubExpr = Expr "-" TermExpr
@@ -22,6 +22,8 @@ JoshLang {
   FunCall = ident "(" Arguments ")"
   Arguments = ListOf<Expr, ",">
   DefVar  = "def" ident
+  DefFun  = "def" ident "(" Parameters ")" Block
+  Parameters = ListOf<ident, ",">
 
   lit = float | int | str
   int = digit+

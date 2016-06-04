@@ -1,209 +1,141 @@
-/**
- * Created by josh on 5/23/16.
- */
+"use strict";
 
-var Integer = {
-    make: function(lit) {
-        var obj = { _val: lit, type:'Integer'};
-        Object.setPrototypeOf(obj, Integer);
-        return obj;
-    },
-    withUnit: function(unit) {
-        return UnitInteger.make(this._val,unit);
-    },
-    add: function(other) {
-        return this.make(this._val + other._val);
-    },
-    multiply: function(other) {
-        return this.make(this._val * other._val);
-    },
-    divide: function(other) {
-        return this.make(this._val / other._val);
-    },
-    lessThan: function(other) {
-        return Boolean.make(this._val < other._val);
-    },
-    lessThanEqual: function(other) {
-        return Boolean.make(this._val <= other._val);
-    },
-    greaterThan: function(other) {
-        return Boolean.make(this._val > other._val);
-    },
-    greaterThanEqual: function(other) {
-        return Boolean.make(this._val >= other._val);
-    },
-    equal: function(other) {
-        return Boolean.make(this._val == other._val);
-    },
-    notEqual: function(other) {
-        return Boolean.make(this._val != other._val);
-    },
-    assign: function(sym) {
-        sym.setValue(this);
-        return this;
-    },
-    jsEquals: function(jsValue) {
-        return this._val == jsValue;
-    },
-    apply: function() {
-        return this;
+class KLNumber {
+    apply() { return this;  }
+    add(other) {              return this.make(this.val +  other.val); }
+    multiply(other) {         return this.make(this.val *  other.val); }
+    divide(other) {           return this.make(this.val /  other.val); }
+    lessThan(other) {         return new KLBoolean(this.val <  other.val); }
+    lessThanEqual(other) {    return new KLBoolean(this.val <= other.val); }
+    greaterThan(other) {      return new KLBoolean(this.val >  other.val); }
+    greaterThanEqual(other) { return new KLBoolean(this.val >= other.val); }
+    equal(other) {            return new KLBoolean(this.val == other.val); }
+    notEqual(other) {         return new KLBoolean(this.val != other.val); }
+    jsEquals(val)   {         return this.val === val; }
+}
+
+class KLInteger extends KLNumber {
+    constructor(lit) {
+        super();
+        this.val = lit;
     }
-};
+    make(val) {  return new KLInteger(val); }
+}
 
-var UnitInteger = {
-    make: function(lit, unit) {
-        var obj = { _val: lit, _unit: unit};
-        Object.setPrototypeOf(obj,UnitInteger);
-        return obj;
-    },
-    multiply: function(other) {
-        if(other._unit) {
-            return this.make(this._val * other._val, this._unit);
-        } else {
-            return this.make(this._val * other._val, this._unit);
+class KLFloat extends KLNumber {
+    constructor(lit) {
+        super(lit);
+        this.val = lit;
+    }
+    make(val) {  return new KLFloat(val); }
+}
+
+class KLBoolean {
+    constructor(lit) {
+        this.val = lit;
+    }
+    jsEquals (jsValue) { return this.val === jsValue;  }
+    isFalse() { return this.val === false }
+    isTrue() {  return this.val === true }
+    apply () {  return this;  }
+}
+
+class KLString {
+    constructor(list) {
+        this.val = list;
+    }
+    add(other) { return new KLString(this.val + other.val); }
+    jsEquals(jsValue) {   return this.val === jsValue; }
+    apply() { return this; }
+}
+
+class KLScope {
+    constructor() {
+        this.storage = {};
+    }
+    makeSubScope() {   return new KLScope()  }
+    hasSymbol(name) {  return this.storage[name] }
+    setSymbol(name, obj) {  this.storage[name] = obj; return this.storage[name] }
+    getSymbol(name) {  return this.storage[name];  }
+    dump() {
+        console.log("scope: ");
+        Object.keys(this.storage).forEach((name) => {
+            console.log("   name = ",name, this.storage[name]);
+        });
+    }
+}
+
+var GlobalScope = new KLScope();
+
+
+class KLSymbol {
+    constructor(name) {
+        this.name = name;
+    }
+    apply(scope) {  return scope.getSymbol(this.name);  }
+}
+
+class FunctionDef {
+    constructor(sym, params, body) {
+        this.sym = sym;
+        this.params = params;
+        this.body = body;
+    }
+    apply(scope) {
+        //create a global function for this body
+        var body = this.body;
+        var params = this.params;
+        GLOBAL[this.sym.name] = function() {
+            var args = arguments;
+            var scope = GlobalScope.makeSubScope();
+            params.forEach((param,i) => scope.setSymbol(param.name,args[i]));
+            return body.apply(scope);
         }
     }
-};
-Object.setPrototypeOf(UnitInteger, Integer);
+}
 
-var Float = {
-    make: function(lit) {
-        var obj = { _val: lit, type:'Float'};
-        Object.setPrototypeOf(obj, Float);
-        return obj;
-    },
-    add: function(other) {
-        return this.make(this._val + other._val);
-    },
-    multiply: function(other) {
-        return this.make(this._val * other._val);
-    },
-    divide: function(other) {
-        return this.make(this._val / other._val);
-    },
-    assign: function(sym) {
-        sym._val = this;
-        return sym;
-    },
-    jsEquals: function(jsValue) {
-        return this._val == jsValue;
-    },
-    apply: function() {
-        return this;
+class Block {
+    constructor(target) {
+        this.target = target;
     }
-};
-
-var Boolean = {
-    make: function(lit) {
-        var obj = {
-            _val:lit, type:'Boolean'
-        };
-        Object.setPrototypeOf(obj, Boolean);
-        return obj;
-    },
-    jsEquals: function(jsValue) {
-        return this._val === jsValue;
-    },
-    apply: function() {
-        return this;
-    }
-};
-
-var String = {
-    make: function(lit) {
-        var obj = { _val:lit, type:'String' };
-        Object.setPrototypeOf(obj, String);
-        return obj;
-    },
-    add: function(other) {
-        return this.make(this._val + other._val);
-    },
-    jsEquals: function(jsValue) {
-        return this._val === jsValue;
-    },
-    apply: function() {
-        return this;
-    }
-};
-
-var Symbol = {
-    scope:{},
-    make: function(name, scope) {
-        if(!this.scope[name]) {
-            var obj = { name:name, type:'Symbol', value:null };
-            Object.setPrototypeOf(obj, Symbol);
-            this.scope[name] = obj;
-        }
-        return this.scope[name];
-    },
-    setValue: function(v) {
-        this.value = v;
-        return v;
-    },
-    getValue: function() {
-        return this.value;
-    },
-    dump: function() {
-        console.log("current scope",this.scope);
-        Object.keys(this.scope).forEach((name) => {
-            console.log("name = ",name, this.scope[name]);
-        });
-    },
-    apply: function() {
-        return this.getValue();
-    }
-};
-
-var Block = {
-    make: function (target) {
-        var obj = {_target: target, type: 'Block'};
-        Object.setPrototypeOf(obj, Block);
-        return obj;
-    },
-    apply: function() {
-        var results = this._target.map(function(expr) {
-            if(expr instanceof Array) return reduceArray(expr);
-            return expr.apply();
-        });
+    apply(scope) {
+        var results = this.target.map((expr) => expr.apply(scope));
         return results.pop();
     }
-};
+}
 
-var WhileLoop = {
-    make: function(cond, body) {
-        var obj = { cond:cond, body:body, type:'WhileLoop'};
-        Object.setPrototypeOf(obj, WhileLoop);
-        return obj;
-    },
-    apply: function() {
-        var ret = null;
+class WhileLoop {
+    constructor(cond, body) {
+        this.cond = cond;
+        this.body = body;
+    }
+    apply(scope) {
         while(true) {
-            var condVal = this.cond.apply();
-            if (condVal.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
-            if (condVal._val == false) break;
-            ret = this.body.apply();
+            var condVal = this.cond.apply(scope);
+            if (!condVal instanceof KLBoolean) throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
+            if (condVal.isFalse()) break;
+            var ret = this.body.apply(scope);
         }
         return ret;
     }
-};
+}
 
-var IfCond = {
-    make: function(cond, body) {
-        var obj = { cond:cond, body:body, type:'IfCond'};
-        Object.setPrototypeOf(obj, IfCond);
-        return obj;
-    },
-    apply: function() {
-        var val = this.cond.apply();
-        if (val.type != 'Boolean') throw new Error("while condition does not resolve to a boolean!\n" + JSON.stringify(this.cond, null, '  '));
-        if (val._val == true) return this.body.apply();
-        return Boolean.make(false);
+class IfCond {
+    constructor(cond, body) {
+        this.cond = cond;
+        this.body = body;
     }
-};
+    apply(scope) {
+        var val = this.cond.apply(scope);
+        if (! (val instanceof  KLBoolean)) throw new Error("while condition does not resolve to a KLBoolean!\n" + JSON.stringify(this.cond, null, '  '));
+        if (val.isTrue()) return this.body.apply(scope);
+        return new KLBoolean(false);
+    }
+}
 
 var GLOBAL = {
     print : function (arg) {
-        console.log('print:',arg._val);
+        console.log('print:',arg.val);
         return arg;
     },
     max: function(A,B) {
@@ -212,57 +144,43 @@ var GLOBAL = {
     }
 };
 
-var FunctionCall = {
-    make: function(funName, argObj) {
-        var obj = { _arg: argObj, type:'FunctionCall', _method:funName};
-        Object.setPrototypeOf(obj, FunctionCall);
-        return obj;
-    },
-    apply: function() {
-        var mname = this._method;
-        var args = this._arg;
-        if(args instanceof Array) args = args.map((arg) => arg.apply());
-        return GLOBAL[mname.name].apply(null,args);
+class FunctionCall {
+    constructor(funName, argObj) {
+        this.method = funName;
+        this.arg = argObj;
     }
-};
-
-var MethodCall = {
-    make: function(target, methodName, arg) {
-        var obj = { _target: target, type:'MethodCall', _method:methodName, _arg:arg};
-        Object.setPrototypeOf(obj, MethodCall);
-        return obj;
-    },
-    apply: function() {
-        var obj = this._target;
-        if(obj.apply) obj = obj.apply();
-        var arg = this._arg;
-        if(arg.apply && this._method != 'assign') arg = arg.apply();
-        return obj[this._method](arg);
+    apply(scope) {
+        var args = this.arg;
+        if(args instanceof Array) args = args.map((arg) => arg.apply(scope));
+        return GLOBAL[this.method.name].apply(null,args);
     }
-};
-
-function reduceArray(arr) {
-    arr = arr.slice();
-    if(arr.length == 1) {
-        if(arr[0].type == 'FunctionCall') return arr[0].apply();
-        return arr[0];
-    }
-    var first = arr.shift();
-    first.apply(arr);
-    return reduceArray(arr);
 }
 
+class MethodCall {
+    constructor(target, methodName, arg) {
+        this.target = target;
+        this.method = methodName;
+        this.arg = arg;
+    }
+    apply(scope) {
+        var obj = this.target.apply(scope);
+        //special case for assign
+        if(this.method == 'assign') return scope.setSymbol(this.arg.name,obj);
+        return obj[this.method](this.arg.apply(scope));
+    }
+}
 
 module.exports = {
-    Integer: Integer,
-    Float: Float,
-    Boolean: Boolean,
-    String: String,
-    Symbol: Symbol,
+    KLInteger: KLInteger,
+    KLFloat: KLFloat,
+    KLBoolean: KLBoolean,
+    KLString: KLString,
+    KLSymbol: KLSymbol,
     Block: Block,
-    reduceArray: reduceArray,
     WhileLoop: WhileLoop,
     IfCond: IfCond,
     MethodCall: MethodCall,
-    FunctionCall: FunctionCall
+    FunctionCall: FunctionCall,
+    FunctionDef: FunctionDef,
+    GlobalScope: GlobalScope
 };

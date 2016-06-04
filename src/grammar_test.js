@@ -141,6 +141,7 @@ x // returns 0
 var ohm = require('ohm-js');
 var fs = require('fs');
 var assert = require('assert');
+var util = require('util');
 //var Objects = require('./objects');
 
 //load the grammar
@@ -162,7 +163,9 @@ var sem = gram.semantics().addOperation('toList',{
 
     FunCall: function(a,_,b,_) {  return ['funcall', a.toList(), b.toList()]; },
     Arguments: function(a) {      return a.asIteration().toList();    },
-    DefVar: function(_,ident) {   return ['def',ident.toList()];   },
+    Parameters: function(a) {      return a.asIteration().toList();    },
+    DefVar: function(_,ident) {   return ['defvar',ident.toList()];   },
+    DefFun: function(_,ident,_,args,_,block) { return ['deffun', ident.toList(),args.toList(),block.toList()]; },
     AssignExpr: function(a,_,b) { return [a.toList(), 'assign', b.toList()]; },
 
     Block: function(_,b,_) {  return ['block', b.toList()]; },
@@ -176,7 +179,8 @@ function test(input, answer) {
     var match = gram.match(input);
     if(match.failed()) return console.log("input failed to match " + input + match.message);
     var result = sem(match).toList();
-    console.log('result = ', result, answer);
+    console.log('result = ', util.inspect(result, {depth:5}));
+    console.log("answer", util.inspect(answer, {depth:5}));
     assert.deepEqual(result,answer);
 }
 
@@ -210,7 +214,7 @@ test('print("foo") ', ["funcall","@print",["foo"]]);
 // variables
 test('x','@x');
 test('x+5',['@x','add',5]);
-test('def x',['def','@x']);
+test('def x',['defvar','@x']);
 test("4 -> x",[4,'assign','@x']);
 test('4+5 -> x',[[4,'add',5],'assign','@x']);
 
@@ -234,3 +238,11 @@ test('if { x <= 5 } { x+1 -> x }', ['if',
 
 test('4+5*6',[[4,'add',5],'mul',6]);
 
+test('def myFun() { 1+2+3+4 }', ['deffun','@myFun',[], ['block', [[[[1,'add',2],'add',3],'add',4]]]]);
+test('def myFun(x) { 1+2+3+4 }', ['deffun','@myFun',['@x'], ['block', [[[[1,'add',2],'add',3],'add',4]]]]);
+test('def myFun(x,y) { 1+2+3+4 }', ['deffun','@myFun',['@x','@y'], ['block', [[[[1,'add',2],'add',3],'add',4]]]]);
+test('def myFun(x) { 1+x }', ['deffun','@myFun',['@x'], ['block', [[1,'add','@x']]]]);
+test('def myFun(x,y) { print("foo") x+y }', ['deffun','@myFun',['@x','@y'], ['block', [
+    [  'funcall', '@print', ['foo'] ],
+    [ '@x','add','@y']
+]]]);
