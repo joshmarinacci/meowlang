@@ -1,7 +1,4 @@
-Last time [link] I introduced Ohm, an open source meta language parser
-with an easy to use syntax. We built a parser for various
-kinds of numbers.  This week we will extend the parser
-to calculate arithmetic expressions.
+[Last time](link) I introduced Ohm, an open source meta language parser with an easy to use syntax. We built a parser for different number formats.  This week we will extend the parser to calculate arithmetic expressions.
 
 ```
   // just a basic integer
@@ -15,16 +12,11 @@ to calculate arithmetic expressions.
           | MulExpr "/" PriExpr -- divide
           | PriExpr
 
-
   PriExpr = "(" Expr ")" -- paren
           | Number
 ```
 
-this is a bit complicated so let's break it down into pieces.
-expr can be an additive expression, an additive expression
-can be addition, subtraction, or a multiplicitive expression.
-a multiplicitive expression is times, divide or a primary expression.
-the primary expression is an expression inside parenthesis or a number.
+This is a bit complicated so let's break it down into pieces. expr can be an additive expression, an additive expression can be addition, subtraction, or a multiplicitive expression. a multiplicitive expression is times, divide or a primary expression. the primary expression is an expression inside parenthesis or a number.
 
 At first this looks very strange.  why is the general expression only
 an additive expression, and is AddExpr just the first line or all three lines?
@@ -44,12 +36,9 @@ AddExpr_plus   = AddExpr "+" MulExpr
 AddExpr_minus  = AddExpr "-" MulExpr
 ```
 
-In other words there are three forms of the add expression. Rather than having
-to break them out separately Ohm lets us combine them into a more compact
-and cleaner syntax.
+In other words there are three forms of the add expression. Rather than having to break them out separately Ohm lets us combine them into a more compact and cleaner syntax.
 
-Second, why do we need to group the plus and minus versions of add together, seprate
-from the times and divide forms?  This comes down to operator precedence. 
+Second, why do we need to group the plus and minus versions of add together, separate from the times and divide forms?  This comes down to operator precedence.
 
 Consider the following expression:
 
@@ -57,50 +46,33 @@ Consider the following expression:
 4 + 5 * 6
 ```
 
-Do you evaluate the + or the * first? Which order we do the operators 
-affects the final answer. In many programming languages (including JavaScript)
- there is a 
-defined operator precedence order. Usually multiplication and division
-come before addition and subtraction.  So the expression above is
-equivalent to 
+Do you evaluate the + or the * first? The order in which we execute the operators affects the final answer. In many programming languages (including JavaScript)  there is a defined operator precedence order. Usually multiplication and division come before addition and subtraction.  So the expression above is equivalent to:
 
 ```
 4 + (5*6)
 ```
 
-However, some programming languages, like Smalltalk evaulate operators
-left to right. So the expression above would be equivalent to:
+However, some programming languages, like Smalltalk, evaluate operators
+left to right without any precedence. So the expression above would be equivalent to:
 
 ```
 (4+5) * 6
 ```
 
-For this calculator we will go with the javaScript form. So now we must group
-the mulpication and division together and make sure they are executed before
-the addition and subtraction. That's why Expr is made up of AddExpr, and AddExpr
-contains MulExpr, and MulExpr contains the PriExpr. Only in PriExpr do we get
-to actual numbers.   This seems backwards, but we need to consider how things
-will be evaluated.  4 + 5 * 6 will be parsed into this:
+For this calculator we will go with the JavaScript form of precedence. So now we must group the multiplication and division together and make sure they are executed before the addition and subtraction. That's why Expr is made up of AddExpr, and AddExpr contains MulExpr, and MulExpr contains the PriExpr. Only in PriExpr do we get to actual numbers.  This seems backwards. If MulExpr comes first then why is is listed after AddExpr? We need to consider how things will be evaluated.  4 + 5 * 6 will be parsed into this:
 
 ```
 Add(4, Mul(5,6))
 ```
 
 The inner most expression is evaluated first, so the MulExpr must be closest
-to Number.  Adds will be evaulated only after all Mul's are done.
+to Number.  Adds will be evaluated only after all the Muls are done.
 
-I realize this is tricky to understand, and honestly it's one of the reasons I prefer
-Smalltalk's approach of left to right.  In general you only need to implement this once
-and it's common to just borrow from another grammar that get's it right. I've adapted
-this one from the official Ohm Math example.
+I realize this is tricky to understand, and honestly it's one of the reasons I prefer Smalltalk's approach of left to right.  In general you only need to implement this once and it's common to just borrow from another grammar that get's it right. I've adapted this one from the official [Ohm Math](link) example.
 
+Now that we have a parser that we know processes things in the right order we can actually do some arithmetic.  Each action function will just perform an operation on the results of it's sub nodes.  So 4+5 will add the 4 and 5 nodes together. Each of those is an int which just returns a real JS number.
 
-Now that we have a parser that we know processes things in the right order we can actually do
-some arithmetic.  Each action function will just perform an operation on the results of it's
-sub nodes.  So 4+5 will add the 4 and 5 nodes together. Each of those is an int which just returns
-a real JS number. 
-
-Here's what the actions look like for arithemtic
+Here's what the actions look like for arithmetic
 
 ```
 var Calculator = grammar.semantics().addOperation('calc', {
@@ -133,8 +105,7 @@ var Calculator = grammar.semantics().addOperation('calc', {
 ```
 
 
-The first actions are the only new ones. The others are existing from the last blog, they parse all of the forms
-of numbers.
+The first actions are the only new ones. The others are existing from the last blog, they parse all of the forms of numbers.
 
 
-That's actually it.
+That's actually it.  Just do the basic math for each expression.  Of course, if we just built a simple calculator we wouldn't be using the full power of Ohm. Instead of evaluating an arithmetic expression, let's generate code in a completely different language to do it for us.  Let' make a new set of semantics which convert this math into Java code.  Then we will have created an actual language transpiler.
