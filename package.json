@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ohm-js": "^0.11.0"
+    "ohm-js": "^0.12.0"
   }
 }

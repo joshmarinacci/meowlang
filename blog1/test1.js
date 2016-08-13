@@ -9,25 +9,25 @@ var fs = require('fs');
 var assert = require('assert');
 var grammar = ohm.grammar(fs.readFileSync('blog1/grammar.ohm').toString());
 
-var toJS = grammar.semantics().addOperation('toJS', {
+var toJS = grammar.createSemantics().addOperation('toJS', {
     Number: function(a) {
         return a.toJS();
     },
     int: function(a) {
-        console.log("doing int", this.interval.contents);
-        return parseInt(this.interval.contents,10);
+        console.log("doing int", this.sourceString);
+        return parseInt(this.sourceString,10);
     },
     float: function(a,b,c,d) {
-        console.log("doing float", this.interval.contents);
-        return parseFloat(this.interval.contents);
+        console.log("doing float", this.sourceString);
+        return parseFloat(this.sourceString);
     },
     hex: function(a,b) {
-        console.log("doing hex", this.interval.contents);
-        return parseInt(this.interval.contents.substring(2),16);
+        console.log("doing hex", this.sourceString);
+        return parseInt(this.sourceString.substring(2),16);
     },
     oct: function(a,b) {
-        console.log("doing octal", this.interval.contents.substring(2));
-        return parseInt(this.interval.contents.substring(2),8);
+        console.log("doing octal", this.sourceString.substring(2));
+        return parseInt(this.sourceString.substring(2),8);
     }
 });
 

@@ -6,10 +6,10 @@ var MO = require('./objects');
 function binop(op,a,b) {  return new MO.BinaryOp(op, a.toAST(), b.toAST()); }
 
 var operation = {
-    int:   function (a)          { return new MO.MNumber(parseInt(this.interval.contents, 10)); },
-    float: function (a, _, b)    { return new MO.MNumber(parseFloat(this.interval.contents, 10));  },
-    str:   function (a, text, b) { return new MO.MString(text.interval.contents); },
-    ident: function (a, b)       { return new MO.MSymbol(this.interval.contents, null) },
+    int:   function (a)          { return new MO.MNumber(parseInt(this.sourceString, 10)); },
+    float: function (a, _, b)    { return new MO.MNumber(parseFloat(this.sourceString, 10));  },
+    str:   function (a, text, b) { return new MO.MString(text.sourceString); },
+    ident: function (a, b)       { return new MO.MSymbol(this.sourceString, null) },
 
     AddExpr: (a, _, b) => binop('add',a,b),
     MulExpr: (a, _, b) => binop('mul',a,b),
@@ -37,6 +37,6 @@ var operation = {
 };
 module.exports = {
     load: function (gram) {
-        return gram.semantics().addOperation('toAST', operation);
+        return gram.createSemantics().addOperation('toAST', operation);
     }
 };

@@ -11,9 +11,9 @@
 var ohm = require('ohm-js');
 var fs = require('fs');
 var assert = require('assert');
-var grammar = ohm.grammar(fs.readFileSync('src/blog_numbers/coolcalc.ohm').toString());
+var grammar = ohm.grammar(fs.readFileSync('blog2/coolcalc.ohm').toString());
 
-var Calculator = grammar.semantics().addOperation('calc', {
+var Calculator = grammar.createSemantics().addOperation('calc', {
     AddExpr: function(a) {
         return a.calc();
     },
@@ -38,16 +38,16 @@ var Calculator = grammar.semantics().addOperation('calc', {
 
 
     int: function(a) {
-        return parseInt(this.interval.contents,10);
+        return parseInt(this.sourceString,10);
     },
     float: function(a,b,c,d) {
-        return parseFloat(this.interval.contents);
+        return parseFloat(this.this.sourceString);
     },
     hex: function(a,b) {
-        return parseInt(this.interval.contents.substring(2),16);
+        return parseInt(this.this.sourceString.substring(2),16);
     },
     oct: function(a,b) {
-        return parseInt(this.interval.contents.substring(2),8);
+        return parseInt(this.this.sourceString.substring(2),8);
     }
 });
 
