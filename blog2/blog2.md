@@ -119,11 +119,32 @@ var Calculator = grammar.createSemantics().addOperation('calc', {
 ```
 
 
-The first actions are the only new ones. The others are the same ones from the last blog, they parse all of the forms of numbers (integers, floating point, hexadecimal, and octal).
-
+The first actions are the only new ones. The others are the same ones 
+from the last blog, they parse all of the forms of numbers (integers, 
+floating point, hexadecimal, and octal).
 
 That's actually it.  Just do the basic math for each expression.  Of course, 
 if we just built a simple calculator we wouldn't be using the full power of Ohm. 
+
+Our goal is to eventually extend this into a real programming language and
+what we have now just won't do.  This evaluates expressions as they are found
+in the source code. that's fine for basic math, but what if we want to handle
+calling a function inside of a loop? The action would only be called once, but
+we want to invoke the function every time inside of the loop. The solution is
+to not perform arithmetic inside of the semantic operation. Instead we must
+return a tree of objects which represent the arithmetic (or later, loops and functions)
+and can be evaluated anytime we need it.  This is called an expression tree, and
+it's the next big step for building a language interpreter.
+
+A key part of Ohm's design is the ability to have multiple sets of operations
+in our semantics. Instead of replacing our current `calc` operation, let's build
+a new one called `toAST`.
+
+
+
+
+ 
+ 
 Instead of evaluating an arithmetic expression, let's generate code in a 
 completely different language to do it for us.  Let' make a new set of semantics 
 which convert this math into Java code.  Then we will have created an actual 

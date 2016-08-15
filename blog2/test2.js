@@ -11,7 +11,7 @@
 var ohm = require('ohm-js');
 var fs = require('fs');
 var assert = require('assert');
-var grammar = ohm.grammar(fs.readFileSync('blog2/coolcalc.ohm').toString());
+var grammar = ohm.grammar(fs.readFileSync('blog2/grammar.ohm').toString());
 
 var Calculator = grammar.createSemantics().addOperation('calc', {
     AddExpr: function(a) {
