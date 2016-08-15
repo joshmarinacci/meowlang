@@ -1,4 +1,4 @@
-CoolCalc {
+CoolNums {
   // just a basic integer
   Expr =  AddExpr
 

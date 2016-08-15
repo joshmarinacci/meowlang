@@ -95,9 +95,9 @@ The `ohm.grammar` will read in the file and parse it into a
 grammar object. Now we can add semantics.  Add this to your file:
 
 ```
-var sem = grammar.semantics().addOperation('toJS', {
+var sem = grammar.createSemantics().addOperation('toJS', {
     Number: function(a) {
-        return parseInt(this.interval.contents,10);
+        return parseInt(this.sourceString,10);
     }
 });
 ```
@@ -115,8 +115,8 @@ information, create objects, or recursively call `toJS` on any sub-nodes.
 In this case we just want to convert the matched text into a real Javascript integer.
 
 All semantic functions have an implicit `this` object with some useful 
-properties. The `interval` property represents the part of the input text 
-that matches this node. `this.interval.contents` is the matched input as a 
+properties. The `source` property represents the part of the input text 
+that matches this node. `this.sourceString` is the matched input as a 
 string. Calling the built in JavaScript function `parseInt` turns this string 
 to a number. The `10` argument to `parseInt` tells JavaScript that we are 
 giving it a number in base ten. If we leave it out then JS will assume it's base 10 
@@ -192,17 +192,17 @@ Now let's go look at our semantic actions again.  Since we now have new rules
 we need new action functions: one for `int` and one for `float`.
 
 ```javascript
-var sem = grammar.semantics().addOperation('toJS', {
+var sem = grammar.createSemantics().addOperation('toJS', {
     Number: function(a) {
         return a.toJS();
     },
     int: function(a) {
-        console.log("doing int", this.interval.contents);
-        return parseInt(this.interval.contents,10);
+        console.log("doing int", this.sourceString);
+        return parseInt(this.sourceString,10);
     },
     float: function(a,b,c) {
-        console.log("doing float", this.interval.contents);
-        return parseFloat(this.interval.contents);
+        console.log("doing float", this.sourceString);
+        return parseFloat(this.sourceString);
     }
 });
 ```
@@ -275,7 +275,7 @@ recognize hex as another possible option. Now we just need another action rule f
 
 ```javascript
     hex: function(a,b) {
-        return parseInt(this.interval.contents,16);
+        return parseInt(this.sourceString,16);
     }
 ```
 
@@ -324,8 +324,8 @@ action, even if we don't use it.
 
 ```javascript
     float: function(a,b,c,d) {
-        console.log("doing float", this.interval.contents);
-        return parseFloat(this.interval.contents);
+        console.log("doing float", this.sourceString);
+        return parseFloat(this.sourceString);
     },
 ```
 
