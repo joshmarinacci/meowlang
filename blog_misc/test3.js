@@ -5,7 +5,7 @@
 var ohm = require('ohm-js');
 var fs = require('fs');
 var assert = require('assert');
-var grammar = ohm.grammar(fs.readFileSync('blog3/ini.ohm').toString());
+var grammar = ohm.grammar(fs.readFileSync('blog_misc/ini.ohm').toString());
 
 var IniParser = grammar.createSemantics().addOperation('parse', {
     comment: function(a,b,c) {

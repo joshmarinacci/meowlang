@@ -1,6 +1,6 @@
 CoolNums {
   // just a basic integer
-  Expr =  AddExpr
+  Expr =  Assign | AddExpr | Identifier | Number
 
   AddExpr = AddExpr "+" MulExpr -- plus
           | AddExpr "-" MulExpr -- minus
@@ -10,9 +10,12 @@ CoolNums {
           | MulExpr "/" PriExpr -- divide
           | PriExpr
 
-
   PriExpr = "(" Expr ")" -- paren
+          | Identifier
           | Number
+
+  Assign = Identifier "=" Expr
+  Identifier = letter (letter|digit)*
 
   Number = oct | hex | float | int
   int    = digit+
@@ -21,7 +24,7 @@ CoolNums {
   hex    = "0x" hexDigit+
   oct    = "0o" octDigit+
   octDigit = "0".."7"
-  //hexDigit := "0".."9" | "a".."f" | "A".."F"
+  //hexDigit := "0".."9" | "a".."f" | "A".."F" //already defined by Ohm
 }
 
 

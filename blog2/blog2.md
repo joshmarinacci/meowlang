@@ -124,7 +124,10 @@ from the last blog, they parse all of the forms of numbers (integers,
 floating point, hexadecimal, and octal).
 
 That's actually it.  Just do the basic math for each expression.  Of course, 
-if we just built a simple calculator we wouldn't be using the full power of Ohm. 
+if we just built a simple calculator we wouldn't be using the full power of Ohm.
+ 
+ 
+# Using an AST  
 
 Our goal is to eventually extend this into a real programming language and
 what we have now just won't do.  This evaluates expressions as they are found
@@ -136,18 +139,266 @@ return a tree of objects which represent the arithmetic (or later, loops and fun
 and can be evaluated anytime we need it.  This is called an expression tree, and
 it's the next big step for building a language interpreter.
 
-A key part of Ohm's design is the ability to have multiple sets of operations
-in our semantics. Instead of replacing our current `calc` operation, let's build
-a new one called `toAST`.
+the ability to run code like `x=10` followed by `x*2`.
+
+this only works for constants. each operation immediately does math on the values 
+next to it. that only works for constants. what if we defined a variable earlier and
+want to perform arithmetic on it? now we need a symbol table and a way to look up
+the *current* value of the symbol when the math is evaluated.  doing math immediately
+wont' work anymore. instead we need an AST.
 
 
+Further more we need a way to store values as variables, using symbols, and look
+up these symbols.  Let's define some terms
 
-
+* A *number* is an actual numeric constant. Something like 4 or 4.5 or 0x45. 
+* A *symbol* is an identifier which *points to* a number. Something like `x` or `myVal`.
+* An *assignment* is an operation which makes a symbol point to a real number.
+* A binary operation, or *BinOp*, is a math operation which takes two arguments. Something like 4+5 or 4/5. Right now we only support basic arithmetic, but in the future we will support boolean operators like x<5 and 7!=y, so we'll call them binary operations instead of math ops.
+ 
+The key concept when building a language is _resolution_. We can say that the expression 4+5 *resolves* to 9. Resolution is when we do actual work; the actual calculations. Resolving a binary operation executes the actual operation. Resolving a symbol returns the underlying value that the symbol points to.  Resolving a number just returns itself, the number.
+ 
+With these definitions we can start to build some code.
  
  
-Instead of evaluating an arithmetic expression, let's generate code in a 
-completely different language to do it for us.  Let' make a new set of semantics 
-which convert this math into Java code.  Then we will have created an actual 
-language [transpiler](https://en.wikipedia.org/wiki/Source-to-source_compiler).
+First, let's create a class which represents a number. It stores an underlying javascript value, `val`, and
+returns itself when `resolve` is called.
+
+```
+class MNumber {
+ constructor(val) { this.val = val; }
+ resolve(scope)   { return this; }
+ jsEquals(jsval)  { return this.val == jsval; }
+}
+```
+
+Note that I added a `jsEquals` method. This lets us compare the number to a real Javascript number. This is helpful
+when writing our unit tests later.
+
+
+
+Now we can define our basic binary operations for arithmetic. Since addition, subtraction, and the others
+ are basically all the same, create a single BinOp class instead of one for each operation.
+ 
+```
+class BinOp {
+    constructor(op, A, B) {
+        this.op = op;
+        this.A = A;
+        this.B = B;
+    }
+    resolve(scope) {
+        var a = this.A.resolve(scope).val;
+        var b = this.B.resolve(scope).val;
+        if(this.op == 'add') return new MNumber(a+b);
+        if(this.op == 'sub') return new MNumber(a-b);
+        if(this.op == 'mul') return new MNumber(a*b);
+        if(this.op == 'div') return new MNumber(a/b);
+    }
+}
+```
+
+BinOp accepts the operation and two values to perform the operation on (called _operands_ in math terms).  The
+resolve method will call resolve on the two operands, pull out the underlying javascript values, then return
+a new MNumber by combining thew to values.  We could skip calling resolve on the operands because MNumber.resolve() \
+just returns itself. I included the resolve call here because later on the operand might not be a number. 
+It might be a symbol or function instead. Defining eveything in terms of `resolve` keeps the code future-proof.
+
+Now we can create our new semantics operation called toAST(). Keep the existing operation, calc, in place. Add to
+it by creating a second semantics.
+ 
+ 
+```
+var semantics = grammar.createSemantics();
+
+var Calculator = semantics.addOperation('calc', {
+   ...
+});
+
+var ASTBuilder = semantics.addOperation('toAST', {
+    AddExpr_plus:  (a, _, b) => new BinOp('add', a.toAST(), b.toAST()),
+    AddExpr_minus: (a, _, b) => new BinOp('sub', a.toAST(), b.toAST()),
+    MulExpr_times: (a, _, b) => new BinOp('mul', a.toAST(), b.toAST()),
+    MulExpr_divide:(a, _, b) => new BinOp('div', a.toAST(), b.toAST()),
+    PriExpr_paren: (_,a,__)  => a.toAST(),
+
+    //reuse the number literal parsing code from `calc` operation
+    Number : function(a) { return new MNumber(a.calc()); }
+});
+```
+          
+As before, most actions recursively call toAST() on the argument. However, the action for Number
+actually calls 'calc' instead. Calc already defined how to parse numbers. This is a a key part of Ohm's design.
+You can have multiple semantic operations which call each-other, as long as they are in the
+same set of semantics. This is another way to reuse code across parsers.  If we one day want to
+extend our math language further we could do it by creating additional semantic operations instead of modifying
+the originals.
+  
+
+
+With the toAST semantics in place we can now rewrite the test code like this:
+
+```
+function test(input, answer) {
+    var match = grammar.match(input);
+    if(match.failed()) return console.log("input failed to match " + input + match.message);
+    var ast = ASTBuilder(match).toAST();
+    var result = ast.resolve();
+    console.log('result = ', result);
+    assert.deepEqual(result.jsEquals(answer),true);
+    console.log('success = ', result, answer);
+}
+```
+
+Calling toAST() returns an expression object instead of a value. Then we can call resolve on this object
+ to get the final value. This might seem like a lot of work for what is fundamentally the same behavior
+ as our earlier `calc` operation that did the arithmetic inline.  The reason we did all this is to lay
+ the ground for a more advanced feature: variables
+ 
+ 
+ 
+# Adding Symbols 
+
+
+To support variables we need a concept called a symbol. A symbol is just a name, or identifier, which points to a real
+value. In many case we could use a real number value instead of a symbol, but symbols give us a special
+ability: symbols can be redefined. You can write x=2 and x*5 to get 10. Then write x=3 and call x*5 again
+to get 15. The same code can be invoked multiple times with different results by changing what the symbol 
+points to. This is a fundamental concept of computer science that makes computation possible.
+ 
+Let's start by creating an MSymbol class (I didn't use Symbol because that will clash with the future
+native Symbol class in native Javascript).
+ 
+```
+class MSymbol {
+    constructor(name) {
+        this.name = name;
+    }
+    resolve(scope) {
+        return scope.getSymbol(this.name);
+    }
+}
+```
+
+Now we need a place to actually sort what the symbols point to. This is called a Scope. For now we will have
+only one Scope called GLOBAL, but in the future we will have more.
+
+
+
+```
+class Scope {
+    constructor() {
+        this.storage = {};
+    }
+    setSymbol(sym, obj) {
+        this.storage[sym.name] = obj;
+        return this.storage[sym.name];
+    }
+    getSymbol(name) {
+        if(this.storage[name]) return this.storage[name];
+        return null;
+    }
+}
+```
+
+
+Now we can create the Assignment operator which actually sets the symbol's value.
+
+
+```
+class Assignment {
+    constructor(sym,val) {
+        this.symbol = sym;
+        this.val = val;
+    }
+    resolve(scope) {
+        return scope.setSymbol(this.symbol, this.val.resolve(scope));
+    }
+}
+```
+
+
+
+With the various classes in place we just need to update the grammar and our semantics to support it.
+
+Update the grammar like this:
+
+```
+CoolNums {
+    // just a basic integer
+    Expr =  Assign | AddExpr | Identifier | Number
+    
+    AddExpr = AddExpr "+" MulExpr -- plus
+          | AddExpr "-" MulExpr -- minus
+          | MulExpr
+    
+    MulExpr = MulExpr "*" PriExpr -- times
+          | MulExpr "/" PriExpr -- divide
+          | PriExpr
+    
+    PriExpr = "(" Expr ")" -- paren
+          | Identifier
+          | Number
+    
+    Assign = Identifier "=" Expr
+    Identifier = letter (letter|digit)*
+    
+    Number = oct | hex | float | int
+    int    = digit+
+    float  = digit+ "." digit+ exp?
+    exp    = "e" "-"? digit+
+    hex    = "0x" hexDigit+
+    oct    = "0o" octDigit+
+    octDigit = "0".."7"
+    //hexDigit := "0".."9" | "a".."f" | "A".."F" //already defined by Ohm
+}
+```
+
+
+refactor the grammar slightly.
+
+expr is one of Group, Assign, BinOp, Identifier, Number
+change PriExpr_paren to Group
+Indentifier is a variable name. starts with a letter then contains a letter or number
+change add to BinOp for Binary Operation, so we can later do other binary operations like != and >=
+add Assign
+
+
+Add these two rules to the `toAST` semantics operation:
+
+
+```
+    Assign:        (a, _, b) => new Assignment(a.toAST(), b.toAST()),
+    Identifier: function (a, b)  { return new MSymbol(this.sourceString, null) },
+```
+
+
+
+
+
+
+note we must turn on strict mode to use the new JavaScript classes in NodeJS by putting 'use strict' at the top of the JavaScript
+file. This also lets us use the arrow syntax for more compact rule definitions.  Notice
+that I didn't use the arrow syntax for the Identifier rule because this needs to reference the `this` variable of the
+rule. The arrow syntax use the `this` of the enclosing object, which is what we want in most cases but not this
+particular case.
+
+
+
+Now we can add some more unit tests for our new variable syntax with symbols:
+
+```
+test('10',10);
+test('x = 10',10);
+test('x',10);
+test('x * 2',20);
+test('x * 0x2',20);
+```
+
+
+## Conclusion
+
+Building a language seems complex at first, but by breaking it down into small steps it becomes quite approachable. We've actually
+done most of the hard work already.  We expanded our number parser into a full calculator, and then into a baby programming language by adding symbols and an AST.  Next time we will add conditionals, loops, and function calls to turn this into a real programming language. 
 
 
