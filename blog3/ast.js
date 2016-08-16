@@ -84,7 +84,7 @@ class IfCondition {
             return this.thenBody.resolve(scope);
         }
         if(this.elseBody) return this.elseBody.resolve(scope);
-        return new MBoolean(false);
+        return new MNumber(false);
     }
 }
 

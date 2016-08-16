@@ -1,12 +1,12 @@
 CoolNums {
     // just a basic integer
-    Expr =  IfExpr | Block | Assign | Group | MathOp | Identifier | Number
+    Expr =  IfExpr | Block | Assign | MathOp | Group | Identifier | Number
 
-    MathOp = Add | Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte
-    Add = Expr "+"  Expr
-    Sub = Expr "-"  Expr
-    Mul = Expr "*"  Expr
-    Div = Expr "/"  Expr
+    MathOp =  Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte | Term
+    Add = Expr "+"  Term
+    Sub = Expr "-"  Term
+    Mul = Expr "*"  Term
+    Div = Expr "/"  Term
     Eq  = Expr "==" Expr
     Neq = Expr "!=" Expr
     Lt  = Expr "<"  Expr
@@ -14,6 +14,8 @@ CoolNums {
     Gt  = Expr ">"  Expr
     Gte = Expr ">=" Expr
 
+
+    Term = Group | Identifier | Number
 
     Assign = Identifier "=" Expr
     Identifier = letter (letter|digit)*

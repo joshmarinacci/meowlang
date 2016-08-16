@@ -18,11 +18,16 @@ function test(input, answer) {
     var ast = ASTBuilder(match).toAST();
     var result = ast.resolve(GLOBAL);
     console.log('result = ', result);
-    assert.deepEqual(result.jsEquals(answer),true);
-    console.log('success = ', result, answer);
+    try {
+        assert.deepEqual(result.jsEquals(answer), true);
+        console.log('success = ', result, answer);
+    } catch(e) {
+        console.log(e);
+    }
 }
 
 test('4+5*10',90);
+test('4*5+10',30);
 
 // math
 test('(4+5)*10',90);
@@ -33,6 +38,8 @@ test('10',10);
 test('x = 10',10);
 test('x',10);
 test('x * 2',20);
+test('x = 10+10',20);
+test('x = 10+10',20);
 
 // boolean expressions
 test('4==4',true);
