@@ -1,30 +1,37 @@
 CoolNums {
-  // just a basic integer
-  Expr =  Assign | AddExpr | Identifier | Number
+    // just a basic integer
+    Expr =  IfExpr | Block | Assign | Group | MathOp | Identifier | Number
 
-  AddExpr = AddExpr "+" MulExpr -- plus
-          | AddExpr "-" MulExpr -- minus
-          | MulExpr
+    MathOp = Add | Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte
+    Add = Expr "+"  Expr
+    Sub = Expr "-"  Expr
+    Mul = Expr "*"  Expr
+    Div = Expr "/"  Expr
+    Eq  = Expr "==" Expr
+    Neq = Expr "!=" Expr
+    Lt  = Expr "<"  Expr
+    Lte = Expr "<=" Expr
+    Gt  = Expr ">"  Expr
+    Gte = Expr ">=" Expr
 
-  MulExpr = MulExpr "*" PriExpr -- times
-          | MulExpr "/" PriExpr -- divide
-          | PriExpr
 
-  PriExpr = "(" Expr ")" -- paren
-          | Identifier
-          | Number
+    Assign = Identifier "=" Expr
+    Identifier = letter (letter|digit)*
 
-  Assign = Identifier "=" Expr
-  Identifier = letter (letter|digit)*
+    Group = "(" Expr ")"
+    Block = "{" Expr* "}"
 
-  Number = oct | hex | float | int
-  int    = digit+
-  float  = digit+ "." digit+ exp?
-  exp    = "e" "-"? digit+
-  hex    = "0x" hexDigit+
-  oct    = "0o" octDigit+
-  octDigit = "0".."7"
-  //hexDigit := "0".."9" | "a".."f" | "A".."F" //already defined by Ohm
+    IfExpr    = "if" Block Block ("else" Block)?
+
+
+    Number = oct | hex | float | int
+    int    = digit+
+    float  = digit+ "." digit+ exp?
+    exp    = "e" "-"? digit+
+    hex    = "0x" hexDigit+
+    oct    = "0o" octDigit+
+    octDigit = "0".."7"
+    //hexDigit := "0".."9" | "a".."f" | "A".."F" //already defined by Ohm
 }
 
 

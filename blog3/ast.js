@@ -42,6 +42,12 @@ class BinOp {
         if(this.op == 'sub') return new MNumber(a-b);
         if(this.op == 'mul') return new MNumber(a*b);
         if(this.op == 'div') return new MNumber(a/b);
+        if(this.op == 'eq')  return new MNumber(a==b);
+        if(this.op == 'neq') return new MNumber(a!=b);
+        if(this.op == 'gt')  return new MNumber(a>b);
+        if(this.op == 'lt')  return new MNumber(a<b);
+        if(this.op == 'gte') return new MNumber(a>=b);
+        if(this.op == 'lte') return new MNumber(a<=b);
     }
 }
 
@@ -55,10 +61,40 @@ class Assignment {
     }
 }
 
+class Block {
+    constructor(block) {
+        this.statements = block;
+    }
+    resolve(scope) {
+        var vals = this.statements.map((expr) => expr.resolve(scope));
+        //only return the last one
+        return vals.pop();
+    }
+}
+
+class IfCondition {
+    constructor(cond, thenBody, elseBody) {
+        this.cond = cond;
+        this.thenBody = thenBody;
+        this.elseBody = elseBody;
+    }
+    resolve(scope) {
+        var val = this.cond.resolve(scope);
+        if (val.val == true) {
+            return this.thenBody.resolve(scope);
+        }
+        if(this.elseBody) return this.elseBody.resolve(scope);
+        return new MBoolean(false);
+    }
+}
+
+
 module.exports = {
     MNumber:MNumber,
     MSymbol:MSymbol,
     BinOp:BinOp,
     Assignment:Assignment,
-    Scope:Scope
+    Scope:Scope,
+    Block: Block,
+    IfCondition:IfCondition
 };

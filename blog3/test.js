@@ -22,8 +22,30 @@ function test(input, answer) {
     console.log('success = ', result, answer);
 }
 
-test('4+5*10',4+5*10);
+test('4+5*10',90);
+
+// math
+test('(4+5)*10',90);
+test('4+(5*10)',54);
 test('10',10);
+
+// symbols
 test('x = 10',10);
 test('x',10);
 test('x * 2',20);
+
+// boolean expressions
+test('4==4',true);
+test('4!=5',true);
+test('4<5',true);
+test('4>5',false);
+test('4<=5',true);
+test('4>=5',false);
+
+//block
+test('{4 5}',5);
+
+//if then else
+test('if{4==2+2}{1}',1);
+test('if{4==2+2}{1}else{2}',1);
+test('if{4==2+3}{1}else{2}',2);
