@@ -4,9 +4,9 @@ Parsers are an incredibly useful software libraries.  Why conceptually simple, t
 can be challenging to implement and are often considered a dark art of computer science.
 This blog series will show that it doesn't have to be magic. We will explore a new 
 open source Javascript library called Ohm which makes parsers easy to build and reuse.
-In this series we will use Ohm to recognize numbers, parse file formats, build a calculator, and eventually create our 
-own full programming language in under 200 lines of code.  I hope to show you 
-that this new powerful tool will let you do things that you might have thought impossible otherwise.
+In this series we will use Ohm to recognize numbers, build a calculator, and more. By the
+end of this series you will have created a complete programming language *in under 200 lines of code*.
+I hope to show you that this new powerful tool will let you do things that you might have thought impossible otherwise.
 
 ## Why are Parsers Hard?
 
@@ -21,28 +21,31 @@ tools are old and assume a fair amount of arcane computer science knowledge. If 
 in college the textbook may well have techniques from the 1970s. Fortunately, parser technology has improved
 a great deal since then. 
 
-Typically a parser is created by defining what you want to parse using a special syntax called a [BNF grammar](link).
-Then you feed this into several tools like [Bison](link) and [Yacc](link) which generate a bunch of C code
+Typically a parser is created by defining what you want to parse using a special syntax 
+called a [formal grammar](https://en.wikipedia.org/wiki/Formal_grammar).
+Then you feed this into several tools like [Bison](https://en.wikipedia.org/wiki/GNU_bison) 
+and [Yacc](https://en.wikipedia.org/wiki/Yacc) which generate a bunch of C code
 that you the need to modify or link into whatever programming language you are actually writing in. The other
 option is to manually write a parser in your preferred language, which is slow and error prone. That's a lot
 of extra work before you get to actually use the parser.
 
-Imagine if your description of the thing you wanted to parse, the BNF, was *also* the parser? What if you
-could just run the BNF directly, then add hooks only where you want? That's what Ohm does.
+Imagine if your description of the thing you wanted to parse, the grammar, was *also* the parser? What if you
+could just run the grammar directly, then add hooks only where you want? That's what Ohm does.
 
 ## Introducing Ohm
 
-[Ohm](link) is a new kind of parsing system. While it resembles the BNF grammars you may have seen in text books
-it's a lot more powerful and easier to use. With Ohm you write your format definition in a very flexible syntax in a .ohm file, 
+[Ohm](https://github.com/cdglabs/ohm) is a new kind of parsing system. While it resembles the grammars you 
+may have seen in text books it's a lot more powerful and easier to use. With Ohm you write your 
+format definition in a very flexible syntax in a .ohm file, 
 then attach semantic meaning to it using your host language. For this blog we will use JavaScript as the host language.
 
 Ohm is based on years of research into making parsers easier and more flexible. 
-[VPRI's STEPS program](link) created many custom languages for 
+VPRI's [STEPS program ](http://www.vpri.org/pdf/tr2012001_steps.pdf) (pdf) created many custom languages for 
 specific tasks (like a fully parallelizable graphics renderer in 400 lines of code!) using Ohm's 
-precursor [OMeta](link).
+precursor [OMeta](http://tinlizzie.org/ometa/).
 
-Ohm has a bunch of interesting features and notations, but rather than explain them all I 
-think we should just dive in and build a simple parser.
+Ohm has many interesting features and notations, but rather than explain them all I 
+think we should just dive in and build something.
 
 ## Parsing Integers
 
@@ -51,19 +54,19 @@ Just look for adjacent digits in a string of text; but let's try to handle *all*
 Integers and floating point. Hex and octal. Scientific notation. A leading negative digit. 
 Parsing numbers is easy. *Doing it right is hard*
 
-To build this code by hand would be difficult and buggy with lots of special cases 
+To build this code by hand would be difficult and buggy, with lots of special cases 
 which sometimes conflict with each other. A regular expression could probably do it, 
-but would be ugly and hard to maintain. Let's do it with Ohm.
+but would be ugly and hard to maintain. Let's do it with Ohm instead.
 
 Every parser in Ohm involves three parts: the *grammar*, the *semantics*, and the *tests*.  I 
 usually pick part of the problem and write tests for it, then build enough 
 of the grammar and semantics to make the tests pass. Then I pick another part of the 
 problem, add more tests, update the grammar and semantics, while making sure all of the tests 
 continue to pass.  Even with our new powerful tool writing parsers is still conceptually 
-complicated. Tests is the only way to build them in a reasonable manner.   Now lets' dig in.
+complicated. Tests are the only way to build parsers in a reasonable manner.   Now let's dig in.
 
-We'll start with just an integer number. An integer is composed of a sequences of digits next to
-each other. Let's put this into a file called grammar1.ohm:
+We'll start with an integer number. An integer is composed of a sequences of digits next to
+each other. Let's put this into a file called grammar.ohm:
 
 ```javascript
 CoolNums {
@@ -91,8 +94,8 @@ var assert = require('assert');
 var grammar = ohm.grammar(fs.readFileSync('src/blog_numbers/syntax1.ohm').toString());
 ```
 
-The `ohm.grammar` will read in the file and parse it into a 
-grammar object. Now we can add semantics.  Add this to your file:
+The `ohm.grammar` call will read in the file and parse it into a 
+grammar object. Now we can add semantics.  Add this to your Javascript file:
 
 ```
 var sem = grammar.createSemantics().addOperation('toJS', {
@@ -108,7 +111,7 @@ rule in the grammar. Each function will be called when the corresponding
 rule in the grammar is parsed. The `Number` function above will be called 
 when the `Number` rule in the grammar is parsed.  The grammar defines 
 what chunks are *in* the language. The semantics define what to *do* with 
-chunks once they've been parsed. 
+chunks once they've been parsed.
 
 Our semantics functions can do anything we want, such as print debugging 
 information, create objects, or recursively call `toJS` on any sub-nodes. 
@@ -164,14 +167,14 @@ input failed to match abcLine 1, col 1:
 Expected a digit
 ```
 
-Cool. The first two succeed and the third one fails. Even better, Ohm automatically gave us a nice 
-error message pointing to the match failure.
+Cool. The first two succeed and the third one fails, as it should. Even better, 
+Ohm automatically gave us a nice error message pointing to the match failure.
 
 ## Floating Point 
 
 
 Our parser works, but it doesn't do anything very interesting. Let's extend it to parse
-both integers and floating point numbers.  Change the grammar1.ohm file to look like this:
+both integers and floating point numbers.  Change the `grammar.ohm` file to look like this:
 
 ```javascript
 CoolNums {
@@ -207,17 +210,17 @@ var sem = grammar.createSemantics().addOperation('toJS', {
 });
 ```
 
-There's two things to note here. First, int and float and Number all
+There's two things to note here. First, `int` and `float` and `Number` all
 have matching grammar rules and functions. However, the action for 
-Number no longer does anything interesting. It receives the child 
+`Number` no longer does anything interesting. It receives the child 
 node 'a' and returns the result of `toJS` on the child. 
 In other words the Number rule simply returns whatever its 
 child rule matched.  Since this is the default behavior of any rule in Ohm we 
 can actually just leave the `Number` action out. Ohm will do it for us.
 
-Second, `int` has one argument 'a' while float has three: 'a', 'b', and 'c'.  
-This is because of the rule's *arity*. [Arity](link) means how many arguments a rule has. 
-If we look back at the grammar, the rule for `float` is
+Second, `int` has one argument `a` while float has three: `a`, `b`, and `c`.  
+This is because of the rule's *arity*. [Arity](https://en.wikipedia.org/wiki/Arity) means 
+how many arguments a rule has. If we look back at the grammar, the rule for `float` is
 
 ```javascript
   float  = digit+ "." digit+
@@ -342,7 +345,7 @@ test('4.8e-10',4.8e-10);
 Ohm is a great tool for building parsers 
 because it's easy to get started and you can incrementally add to it. 
 It also has other great features that I didn't cover today, like 
-a debugging visualizer and subclassing.  
+a debugging visualizer and sub-classing.  
 
 So far we have used Ohm to translate character strings into 
 JavaScript numbers, and often Ohm is used for this very purpose: 
