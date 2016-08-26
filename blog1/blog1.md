@@ -1,25 +1,22 @@
 # Ohm: Parsers Made Easy
 
-Parsers are an incredibly useful software libraries.  Why conceptually simple, they
-can be challenging to implement and are often considered a dark art of computer science.
-This blog series will show that it doesn't have to be magic. We will explore a new 
-open source Javascript library called Ohm which makes parsers easy to build and reuse.
-In this series we will use Ohm to recognize numbers, build a calculator, and more. By the
-end of this series you will have created a complete programming language *in under 200 lines of code*.
-I hope to show you that this new powerful tool will let you do things that you might have thought impossible otherwise.
+Parsers are an incredibly useful software libraries. While conceptually simple, they
+can be challenging to implement and are often considered a dark art of computer science. In this blog series, I'll show you why you don't need to be Harry Potter to master parsers. 
 
-## Why are Parsers Hard?
+We'll explore a new open source Javascript library called Ohm that makes building parsers easy and easier to reuse. In this series, we will use Ohm to recognize numbers, build a calculator, and more. By the
+end of this series you will have created a complete programming language *in under 200 lines of code."
+This powerful tool will let you do things that you might have thought impossible otherwise. 
 
-Parsers are useful. There are lots of times you might need a parser. A new file format might come along that
-you need to process and no one else has written a library for it yet. Or maybe
+## Why Parsers are Hard
+
+Parsers are useful. There are lots of times you might need a parser. A new file format might come along that you need to process and no one else has written a library for it yet. Or maybe
 you find files in an old file format and the existing parsers aren't built for the
 platform you need. I've seen this happen over and over.  Code will come and go but data is forever.
 
 Fundamentally parsers are simple: just transform one data structure into another. 
+
 The challenge that parsers have historically been surprisingly difficult to write, and most of the existing
-tools are old and assume a fair amount of arcane computer science knowledge. If you took a compilers class
-in college the textbook may well have techniques from the 1970s. Fortunately, parser technology has improved
-a great deal since then. 
+tools are old and assume a fair amount of arcane computer science knowledge. If you took a compilers class in college the textbook may well have techniques from the 1970s. Fortunately, parser technology has improved a great deal since then. 
 
 Typically a parser is created by defining what you want to parse using a special syntax 
 called a [formal grammar](https://en.wikipedia.org/wiki/Formal_grammar).
@@ -62,7 +59,7 @@ Every parser in Ohm involves three parts: the *grammar*, the *semantics*, and th
 usually pick part of the problem and write tests for it, then build enough 
 of the grammar and semantics to make the tests pass. Then I pick another part of the 
 problem, add more tests, update the grammar and semantics, while making sure all of the tests 
-continue to pass.  Even with our new powerful tool writing parsers is still conceptually 
+continue to pass.  Even with our new powerful tool, writing parsers is still conceptually 
 complicated. Tests are the only way to build parsers in a reasonable manner.   Now let's dig in.
 
 We'll start with an integer number. An integer is composed of a sequences of digits next to
