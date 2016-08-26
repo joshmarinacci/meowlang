@@ -1,8 +1,8 @@
-# A programming language in 200 lines
+# Meow: A Programming Language in 180 lines
 
 
 
-# while loop
+# Adding the While Loop
 
 
 ```
@@ -59,10 +59,9 @@ test('{ x=8  while { x < 5 } { x = x+1 } } ',null);
 ```
 
 
+Now let's add a few other missing parts: comments and string literals
 
-now let's add a few other missing parts. comments and string literals
-
-# comments
+# Line Based Comments
 
 You may remember from the first blog in this Ohm series that rules which
 begin with capital letters automatically handle whitespace. When you declare
@@ -335,14 +334,18 @@ so we can't just have three statements hanging out there, they have to be inside
 block, so the extra brackets do that. In the future we could make the top level brackets
 implicit, but for now it's better to be explicit.
 
-# conclusion
+# Conclusion in 180 Lines
 
 We now have a real language with conditionals, loops, and function calls. It has
 enough power to write and execute real code. Anything else we want our language to do
 should be possible just by creating more user defined functions.
-
+ 
 I hope through this blog series you have seen both how powerful Ohm is, and how easy
-it is to create your own language.  From this base there are a lot of things you could
+it is to create your own language. Meow is currently 180 lines of code; and that's without
+any crazy esoteric Javascript hacking. The implementation is very straight forward and
+understandable.
+
+From this base there are a lot of things you could
 add to Meow. Experiment with new syntax, numbers with units, or asynchronous calls.
 Embed it in a webpage or cross-generate code for an embedded processor. Almost anything
 you want to do is just a few parser rules away.
