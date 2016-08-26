@@ -1,4 +1,4 @@
-# Ohm: Building a Calculator
+# Ohm: A Calculator with Symbols
 
 
 [Last time](link) I introduced [Ohm](https://github.com/cdglabs/ohm), an open source meta language parser 
@@ -190,10 +190,13 @@ Let's define some terms:
 * An *assignment* is an operation which makes a symbol point to a real number.
 * A binary operation, or *BinOp*, is a math operation which takes two arguments. Something like 4+5 or 4/5. Right now we only support basic arithmetic, but in the future we will support boolean operators like x<5 and 7!=y, so we'll call them binary operations instead of math ops.
  
-The key concept when building a language is _resolution_. We can say that the expression 4+5 *resolves* to 9. Resolution is when we do actual work; the actual calculations. Resolving a binary operation executes the actual operation. Resolving a symbol returns the underlying value that the symbol points to.  Resolving a number just returns itself, the number.
+The key concept when building a language is _resolution_. We can say that the 
+expression 4+5 *resolves* to 9. Resolution is when we do actual work; the 
+actual calculations. Resolving a binary operation executes the actual 
+operation. Resolving a symbol returns the underlying value that the symbol 
+points to.  Resolving a number just returns itself, the number.
  
 With these definitions we can start to build some code.
- 
  
 First, let's create a class which represents a number. It stores an underlying 
 javascript value, `val`, and returns itself when `resolve` is called.
@@ -212,7 +215,7 @@ when writing our unit tests later.
 
 
 Now we can define our basic binary operations for arithmetic. Since addition, subtraction, 
-and the others are basically all the same, create a single BinOp class instead of one for each operation.
+and the others are basically all the same, create a single `BinOp` class instead of one for each operation.
  
 ```
 class BinOp {
@@ -233,13 +236,13 @@ class BinOp {
 ```
 
 BinOp accepts the operation and two values to perform the operation on 
-(called _operands_ in math terms).  The resolve method will call resolve 
+(called _operands_ in math terms).  The `resolve` method will call `resolve` 
 on the two operands, pull out the underlying javascript values, then return
-a new `MNumber` by combining them into new values.  We could skip 
+a new `MNumber` by combining them into new values.  We _could_ skip 
 calling resolve on the operands because `resolve()` on a plain number just returns 
-itself. I included the resolve call here because later on the operand 
+itself. However, I included the resolve call here because later on the operand 
 might not be a number. It might be a symbol or function instead. 
-Defining eveything in terms of `resolve` keeps the code future-proof.
+Defining everything in terms of `resolve` keeps the code future-proof.
 
 Now we can create our new semantics operation called `toAST()`. Keep the
 existing operation, `calc`, in place. Add to it by creating a second semantics.
@@ -265,8 +268,9 @@ var ASTBuilder = semantics.addOperation('toAST', {
 ```
           
 As before, most actions recursively call `toAST()` on the argument. However, 
-the action for Number actually calls `calc` instead. Calc already defined how 
-to parse numbers. We don't need to write it again. 
+the action for Number actually calls `calc` instead of `toAST`. The `Calculator`
+semantics already define how to parse numbers. We don't need to write that part again.
+Instead we _delegate_ to the existing `calc` operation.
 
 This delegation system is a key part of Ohm's design. You can have multiple 
 semantic operations which call each other, as long as they are in the
@@ -274,7 +278,7 @@ same set of semantics. This is another way to reuse code across parsers.
 If we one day want to extend our math language further we could do it by 
 creating additional semantic operations instead of modifying the originals.
 
-With the toAST semantics in place we can now rewrite the test code like this:
+With the `toAST` semantics in place we can now rewrite the test code like this:
 
 ```
 function test(input, answer) {
@@ -288,24 +292,24 @@ function test(input, answer) {
 }
 ```
 
-Calling toAST() returns an expression object instead of a value. Then we can 
+Calling `toAST()` returns an expression object instead of a value. Then we can 
 call resolve on this object to get the final value. This might seem like a lot 
 of work for what is fundamentally the same behavior as our earlier `calc` 
 operation that did the arithmetic inline.  The reason we did all this is to lay
-the ground for a more advanced feature: _variables_
+the ground for a more advanced feature: _symbols_.
 
-# Adding Symbols 
+# Adding Symbols
 
 
 To support variables we need a concept called a symbol. A symbol is just a name, 
 or identifier, which points to a real value. In many cases we could use a real number 
 value instead of a symbol, but symbols give us a special ability: symbols can be 
-redefined. You can write `x=2` and `x*5` to get 10. Then write `x=3` and call `x*5` again
+_redefined_. You can write `x=2` and `x*5` to get `10`. Then write `x=3` and call `x*5` again
 to get `15`. The same code can be invoked multiple times with different results by 
-changing what the symbol _points_ to. This is a fundamental concept of computer 
-science that makes computation possible.
+changing what the symbol _points_ to. This is one of the fundamental concepts of 
+computer science which makes computation possible.
  
-Let's start by creating an `MSymbol` class (I didn't use Symbol because that will 
+Let's start by creating an `MSymbol` class (I didn't use the name `Symbol` because that will 
 clash with the future native Symbol class in Javascript).
  
 ```
@@ -320,7 +324,7 @@ class MSymbol {
 ```
 
 Now we need a place to actually sort what the symbols point to. This is called a 
-Scope. For now we will have only one Scope called GLOBAL, but in the future we 
+_scope_. For now we will have only one scope called GLOBAL, but in the future we 
 will have more.
 
 
@@ -341,7 +345,7 @@ class Scope {
 ```
 
 
-Now we can create the Assignment operator which actually sets the symbol's value.
+Now we can create the `Assignment` operator which actually sets the symbol's value.
 
 
 ```
@@ -394,14 +398,10 @@ CoolNums {
 ```
 
 
-refactor the grammar slightly.
-
-expr is one of Group, Assign, BinOp, Identifier, Number
-change PriExpr_paren to Group
-Indentifier is a variable name. starts with a letter then contains a letter or number
-change add to BinOp for Binary Operation, so we can later do other binary operations like != and >=
-add Assign
-
+Note that I've refactored the grammar slightly. Now `Expr` is one of `Assign`, `AddExpr`,
+`Identifier`, or `Number`. `Identifier` is a variable name that starts with a
+letter and contains letters or numbers. `Assign` is an identifier and an expression 
+separated by the `=` character.
 
 Add these two rules to the `toAST` semantics operation:
 
@@ -411,17 +411,11 @@ Add these two rules to the `toAST` semantics operation:
     Identifier: function (a, b)  { return new MSymbol(this.sourceString, null) },
 ```
 
-
-
-
-
-
-note we must turn on strict mode to use the new JavaScript classes in NodeJS by putting 'use strict' at the top of the JavaScript
-file. This also lets us use the arrow syntax for more compact rule definitions.  Notice
-that I didn't use the arrow syntax for the Identifier rule because this needs to reference the `this` variable of the
-rule. The arrow syntax use the `this` of the enclosing object, which is what we want in most cases but not this
-particular case.
-
+Note that we must turn on _strict mode_ to use the new JavaScript class syntax in NodeJS by putting 
+'use strict' at the top of the file. This also lets us use the arrow syntax for more compact rule definitions.
+Also Notice that I didn't use the arrow syntax for the Identifier rule because this 
+needs to reference the `this` variable of the rule. The arrow syntax uses the `this` of 
+the enclosing object, which is what we want in most cases but not this particular case.
 
 
 Now we can add some more unit tests for our new variable syntax with symbols:
@@ -443,4 +437,6 @@ We expanded our number parser into a full calculator, and then into a baby progr
 language by adding symbols and an AST.  Next time we will add conditionals, loops, and 
 function calls to turn this into a real programming language. 
 
+The code for this entire series is available at my [github repo](link), but don't
+cheat by looking ahead! :)
 

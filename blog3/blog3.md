@@ -1,5 +1,4 @@
-# Building Meow, a Complete Language in < 200 LOC
-
+# Ohm: Blocks and Conditionals
 
 Welcome back. In [blog one](link) we introduced [Ohm](link) and wrote our own parser to handle 
 numbers in various formats. In [blog two](link), we turned our parser into a real arithmetic 
