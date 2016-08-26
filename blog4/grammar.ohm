@@ -1,0 +1,39 @@
+CoolNums {
+    // just a basic integer
+    Expr =  IfExpr | Block | Assign | MathOp | Group | Identifier | Number
+
+    MathOp =  Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte | Term
+    Add = Expr "+"  Term
+    Sub = Expr "-"  Term
+    Mul = Expr "*"  Term
+    Div = Expr "/"  Term
+    Eq  = Expr "==" Expr
+    Neq = Expr "!=" Expr
+    Lt  = Expr "<"  Expr
+    Lte = Expr "<=" Expr
+    Gt  = Expr ">"  Expr
+    Gte = Expr ">=" Expr
+
+
+    Term = Group | Identifier | Number
+
+    Assign = Identifier "=" Expr
+    Identifier = letter (letter|digit)*
+
+    Group = "(" Expr ")"
+    Block = "{" Expr* "}"
+
+    IfExpr    = "if" Block Block ("else" Block)?
+
+
+    Number = oct | hex | float | int
+    int    = digit+
+    float  = digit+ "." digit+ exp?
+    exp    = "e" "-"? digit+
+    hex    = "0x" hexDigit+
+    oct    = "0o" octDigit+
+    octDigit = "0".."7"
+    //hexDigit := "0".."9" | "a".."f" | "A".."F" //already defined by Ohm
+}
+
+
