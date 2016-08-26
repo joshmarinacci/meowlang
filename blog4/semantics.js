@@ -59,6 +59,8 @@ module.exports.make = function(semantics) {
         WhileExpr: (_, cond, body) => new AST.WhileLoop(cond.toAST(), body.toAST()),
         FunCall: (funName,_1,args,_2) => new AST.FunctionCall(funName.toAST(), args.toAST()),
         Arguments: (a) => a.asIteration().toAST(),
+        FunDef: (_1, name, _2, params, _3, block) => new AST.FunctionDef(name.toAST(), params.toAST(), block.toAST()),
+        Parameters: (a) => a.asIteration().toAST(),
         Identifier: function (a, b) {
             return new AST.MSymbol(this.sourceString, null)
         },

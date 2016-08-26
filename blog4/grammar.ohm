@@ -1,6 +1,6 @@
 CoolNums {
     // just a basic integer
-    Expr =  WhileExpr | IfExpr | Block | Assign | MathOp | Group | Identifier | Number | String
+    Expr =  FunDef | WhileExpr | IfExpr | Block | Assign | MathOp | Group | Identifier | Number | String
 
     MathOp =  Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte | Term
     Add = Expr "+"  Term
@@ -28,6 +28,9 @@ CoolNums {
 
     FunCall = Identifier "(" Arguments ")"
     Arguments = ListOf<Expr, ",">
+
+    FunDef  = "fun" Identifier "(" Parameters ")" Block
+    Parameters = ListOf<Identifier, ",">
 
     qq = "\""
     String = qq (~qq any)+ qq

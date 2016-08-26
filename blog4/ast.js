@@ -16,8 +16,9 @@ class MSymbol {
 }
 
 class Scope {
-    constructor() {
+    constructor(parent) {
         this.storage = {};
+        this.parent = parent?parent:null;
     }
     setSymbol(sym, obj) {
         this.storage[sym.name] = obj;
@@ -25,8 +26,10 @@ class Scope {
     }
     getSymbol(name) {
         if(this.storage[name]) return this.storage[name];
+        if(this.parent) return this.parent.getSymbol(name);
         return null;
     }
+    makeSubScope() {   return new Scope(this)  }
 }
 
 class BinOp {
@@ -112,12 +115,29 @@ class FunctionCall {
     }
     resolve(scope) {
         //lookup the real function from the symbol
-        //if(!scope.hasSymbol(this.fun.name)) throw new Error("cannot resolve symbol " + this.fun.name);
         var fun = scope.getSymbol(this.fun.name);
         //resolve the args
         var args = this.args.map((arg) => arg.resolve(scope));
         //execute the real javascript function
         return fun.apply(null,args);
+    }
+}
+
+
+class FunctionDef {
+    constructor(sym, params, body) {
+        this.sym = sym;
+        this.params = params;
+        this.body = body;
+    }
+    resolve(scope) {
+        var body = this.body;
+        var params = this.params;
+        return scope.setSymbol(new MSymbol(this.sym.name),function() {
+            var scope2 = scope.makeSubScope();
+            params.forEach((param,i) => scope2.setSymbol(new MSymbol(param.name),arguments[i]));
+            return body.resolve(scope2);
+        });
     }
 }
 
@@ -132,5 +152,6 @@ module.exports = {
     Block: Block,
     IfCondition:IfCondition,
     WhileLoop:WhileLoop,
-    FunctionCall:FunctionCall
+    FunctionCall:FunctionCall,
+    FunctionDef:FunctionDef
 };

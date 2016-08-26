@@ -107,18 +107,17 @@ test('if { x < 5 } { print("foo") x=x+1 }', 2);
 test('if { x > 5 } { 17 } else { 18 }', 18);
 
 
-/*
+
 //simple user defined function which ignores arguments
-test('{ def myFun()    { 1+2+3+4 } myFun()     }', 10);
-test('{ def myFun(x)   { 1+2+3+4 } myFun()     }', 10);
-test('{ def myFun(x,y) { 1+2+3+4 } myFun(2,3)  }', 10);
+test('{ fun addNums()    { 1+2+3+4 } addNums()     }', 10);
+test('{ fun addNums(x)   { 1+2+3+4 } addNums()     }', 10);
+test('{ fun addNums(x,y) { 1+2+3+4 } addNums(2,3)  }', 10);
 
 // user defined func which uses first arg
-test('{ def myFun(z)   { 1+z } myFun(9) }', 10);
-test('{ def myFun(x)   { 1+x } myFun(9) }', 10);
+test('{ fun plus1(z)   { 1+z } plus1(9) }', 10);
+test('{ fun plus1(x)   { 1+x } plus1(9) }', 10);
 
 //user defined func called with variable as arg
-test('{ x=5  def myFun(z)   { 1+z } myFun(x) }', 6);
-test('{ x=5  def myFun(x)   { x*2 } myFun(x) }', 10);
-*/
+test('{ x=5  fun plus1(z)  { 1+z } plus1(x)  }', 6);
+test('{ x=5  fun times2(x) { x*2 } times2(x) }', 10);
 

@@ -127,7 +127,7 @@ test(' "foo" + "bar" ', "foobar");
 
 
 
-# function calls
+# Function Calls
 
 now let's add the ability to call functions.
  
@@ -211,19 +211,164 @@ test('max(max(6,5),4)',6);
 
 
 So far so good. Everything we've implemented has the same structure as previous features. We extend the grammar,
-add an AST object (if necessary), add an action, the put in more tests.
+add an AST object (if necessary), add an action, the put in more tests. User defined functions will be a little bit harder, however.
+
+
+# User Defined Functions
+
+User defined functions are functions created in the Meow language rather than in native Javascript.  In Meow
+we define a function with the `fun` keyword like this:
+
+
+```
+ 
+    fun plus1(z) { 
+       1+z 
+    } 
+    
+    plus1(9)
+
+```
+
+The body of a function is just a block. As we defined earlier, a block is a sequence of statements that returns the
+value of the last one. This implicit return means we don't need to have an explicit `return` keyword. The code
+above will return 1 plus the z argument.  This is the grammar update for function definitions. 
+
+
+```
+    Expr =  FunDef | WhileExpr | IfExpr | Block | Assign | MathOp | Group | Identifier | Number | String
+
+    FunDef  = "fun" Identifier "(" Parameters ")" Block
+    Parameters = ListOf<Identifier, ",">
+```
+
+These two new rules new new semantic actions of course:
+
+```
+        FunDef: (_1, name, _2, params, _3, block) => new AST.FunctionDef(name.toAST(), params.toAST(), block.toAST()),
+        Parameters: (a) => a.asIteration().toAST(),
+```
+
+
+So far we have built the FunDef feature the same as previous features. Here's where it gets tricky: scope.
+The function has direct access to the variables passed in as parameters, but it *also* has access to variables
+defined outside the function, unless one of the parameters has the same name.  To build this properly we need
+to expand the definition of scope.  
+
+A scope is a list of names which map to values using symbols. A scope also has a *parent* scope. If a symbol
+can't be found in the scope then it will ask it's parent for the value instead.  This implements the nested
+scope rules for functions.  So we need to update the Scope class accordingly:
+
+
+```
+class Scope {
+    constructor(parent) {
+        this.storage = {};
+        this.parent = parent?parent:null;
+    }
+    setSymbol(sym, obj) {
+        this.storage[sym.name] = obj;
+        return this.storage[sym.name];
+    }
+    getSymbol(name) {
+        if(this.storage[name]) return this.storage[name];
+        if(this.parent) return this.parent.getSymbol(name);
+        return null;
+    }
+    makeSubScope() {   return new Scope(this)  }
+}
+```
+
+
+Now we can make the FunctionDef AST object:
+
+```
+class FunctionDef {
+    constructor(sym, params, body) {
+        this.sym = sym;
+        this.params = params;
+        this.body = body;
+    }
+```
+
+When the function definition is resolved it will create a new symbol in its scope which points to the actual
+function block. This function block will create a sub-scope for the function call, and fill
+this scope with the values of the arguments.  This is dynamic, so we need to do the argument
+resolution *when the function is called* not when it is declared.  To do this we will use
+a nested function like this:
+
+
+```
+    resolve(scope) {
+        var body = this.body;
+        var params = this.params;
+        return scope.setSymbol(new MSymbol(this.sym.name),function() {
+            var scope2 = scope.makeSubScope();
+            params.forEach((param,i) => scope2.setSymbol(new MSymbol(param.name),arguments[i]));
+            return body.resolve(scope2);
+        });
+    }
+}
+```
+
+Now we can finally test a user defined function like this:
+
+```
+x = 5
+fun plus1(z) {
+  1+z
+}
+plus1(x)
+```
+
+To really test it, add this to the `test.js` file:
+
+```
+test('{ x=5  fun plus1(z){ 1+z }   plus1(x)  }', 6);
+```
+
+
+Note that I had to put {} around the code. This is because we have three 
+top level statements: the variable assignment to `x`,  the function definition
+of `plus1`, and the function *call* to plus1.  Everything in Meow is an expression
+so we can't just have three statements hanging out there, they have to be inside of a
+block, so the extra brackets do that. In the future we could make the top level brackets
+implicit, but for now it's better to be explicit.
+
+# conclusion
+
+We now have a real language with conditionals, loops, and function calls. It has
+enough power to write and execute real code. Anything else we want our language to do
+should be possible just by creating more user defined functions.
+
+I hope through this blog series you have seen both how powerful Ohm is, and how easy
+it is to create your own language.  From this base there are a lot of things you could
+add to Meow. Experiment with new syntax, numbers with units, or asynchronous calls.
+Embed it in a webpage or cross-generate code for an embedded processor. Almost anything
+you want to do is just a few parser rules away.
 
 
 
-  
-User defined functions will be a little bit harder, however.
 
-
-
-
-user defined function
-
-
-
-
-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
