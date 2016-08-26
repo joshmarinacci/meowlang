@@ -5,7 +5,7 @@ var fs = require('fs');
 var assert = require('assert');
 var Scope = require('./ast').Scope;
 
-var grammar = ohm.grammar(fs.readFileSync('blog3/grammar.ohm').toString());
+var grammar = ohm.grammar(fs.readFileSync('blog4/grammar.ohm').toString());
 var semantics = grammar.createSemantics();
 
 var ASTBuilder = require('./semantics').make(semantics).ASTBuilder;
@@ -57,10 +57,12 @@ test('if{4==2+2}{1}',1);
 test('if{4==2+2}{1}else{2}',1);
 test('if{4==2+3}{1}else{2}',2);
 
-/*
+
 //while loop
-test('while { x < 5 } { x+1->x }',5);
-*/
+test('{ x=0  while { x < 5 } { x = x+1 } } ',5);
+test('{ x=4  while { x < 5 } { x = x+1 } } ',5);
+test('{ x=8  while { x < 5 } { x = x+1 } } ',null);
+
 /*
 //comments
 test('4 + //6\n 5',9);

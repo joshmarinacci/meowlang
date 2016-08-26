@@ -56,7 +56,7 @@ module.exports.make = function(semantics) {
             var elseBody = elseBlock ? elseBlock.toAST()[0] : null;
             return new AST.IfCondition(cond.toAST(), thenBody, elseBody);
         },
-
+        WhileExpr: (_, cond, body) => new AST.WhileLoop(cond.toAST(), body.toAST()),
         Identifier: function (a, b) {
             return new AST.MSymbol(this.sourceString, null)
         },

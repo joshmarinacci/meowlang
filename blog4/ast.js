@@ -88,6 +88,22 @@ class IfCondition {
     }
 }
 
+class WhileLoop {
+    constructor(cond, body) {
+        this.cond = cond;
+        this.body = body;
+    }
+    resolve(scope) {
+        var ret = new MNumber(null);
+        while(true) {
+            var condVal = this.cond.resolve(scope);
+            if (condVal.jsEquals(false)) break;
+            ret = this.body.resolve(scope);
+        }
+        return ret;
+    }
+}
+
 
 module.exports = {
     MNumber:MNumber,
@@ -96,5 +112,6 @@ module.exports = {
     Assignment:Assignment,
     Scope:Scope,
     Block: Block,
-    IfCondition:IfCondition
+    IfCondition:IfCondition,
+    WhileLoop:WhileLoop
 };

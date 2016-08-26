@@ -1,6 +1,6 @@
 CoolNums {
     // just a basic integer
-    Expr =  IfExpr | Block | Assign | MathOp | Group | Identifier | Number
+    Expr =  WhileExpr | IfExpr | Block | Assign | MathOp | Group | Identifier | Number
 
     MathOp =  Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte | Term
     Add = Expr "+"  Term
@@ -24,6 +24,7 @@ CoolNums {
     Block = "{" Expr* "}"
 
     IfExpr    = "if" Block Block ("else" Block)?
+    WhileExpr = "while" Block Block
 
 
     Number = oct | hex | float | int
