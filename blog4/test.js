@@ -63,15 +63,15 @@ test('{ x=0  while { x < 5 } { x = x+1 } } ',5);
 test('{ x=4  while { x < 5 } { x = x+1 } } ',5);
 test('{ x=8  while { x < 5 } { x = x+1 } } ',null);
 
-/*
+
 //comments
-test('4 + //6\n 5',9);
+test('4 + 5  //+ 6',9);
 
 //string literals
-test(' "foo" ',"foo");
-test(' "foo" + "bar" ', "foobar");
-test('print("foo") ', 'foo');
-*/
+//test(' "foo" ',"foo");
+//test(' "foo" + "bar" ', "foobar");
+//test('print("foo") ', 'foo');
+
 
 /*
 //native function calls

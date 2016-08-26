@@ -35,6 +35,11 @@ CoolNums {
     oct    = "0o" octDigit+
     octDigit = "0".."7"
     //hexDigit := "0".."9" | "a".."f" | "A".."F" //already defined by Ohm
+
+    // override space to include slash slash comments
+    // real version needs to support various unicode whitespace forms
+    space := "\t" | " " | "\n" | comment
+    comment = "//" (~"\n" any)*
 }
 
 
