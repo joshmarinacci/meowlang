@@ -1,15 +1,15 @@
 # Ohm: Blocks and Conditionals
 
-Welcome back. In [blog one](link) we introduced [Ohm](link) and wrote our own parser to handle 
-numbers in various formats. In [blog two](link), we turned our parser into a real arithmetic 
-language with binary operations and symbols.  Finally in this blog we will complete our language
-with conditionals, loops, and user defined functions.
+Welcome back. In [blog one](link) we introduced [Ohm](https://github.com/cdglabs/ohm) and wrote 
+our own parser to handle numbers in various formats. In [blog two](link), we turned our parser 
+into a real arithmetic language with binary operations and symbols.  Finally in this blog we will 
+complete our language with conditionals, loops, and user defined functions.
 
 # Code Cleanup
 
-The first thing our language needs is a name. I'm a fan of cats, but Cat and Kitty are already used
-by [existing](link) [languages](link) so I'm going to call our new language Meow. However, before we dive 
-into new features features, let's do a little refactoring.  
+The first thing our language needs is a name. I'm a fan of cats, but Cat and Kitten are already used
+by [existing](http://www.artima.com/weblogs/viewpost.jsp?thread=160177) [languages](http://kittenlang.org) so I'm going 
+to call our new language _Meow_. However, before we dive into new features features, let's do a little refactoring.  
 
 Move all of the AST classes into a file called `ast.js`. NodeJS doesn't support 
 the new module loading syntax of ES6 yet, so we'll have to manually export the classes like this:
@@ -34,7 +34,7 @@ module.exports = {
 };
 ```
 
-Now move the semantic actions into a `semantics.js` file.  
+Now move the semantic actions into a `semantics.js` file.
 
 ```
 "use strict";
@@ -91,8 +91,8 @@ test('x * 2',20);
 ```
 
 
-To further clean up the code we will go back to Smalltalk precedence. I've always found
-it a pain to remember operator precedence. From now on all expressions will
+To further clean up the code we will go back to [Smalltalk precedence](https://en.wikipedia.org/wiki/Smalltalk#Expressions). I've always
+found it a pain to remember operator precedence. From now on all expressions will
 be evaluated left to right. If you want higher precedence you have to use parenthesis. This will
 make our implementation *far* simpler, and also be easier for programmers to reason about. All arithmetic
 is now grouped under `MathOp`.
@@ -132,7 +132,10 @@ CoolNums {
 
 ## Boolean Expressions
 
-For conditionals we need two things: boolean operations that evaluate to true or false, and an if statement which will execute code when the condition is met. Boolean conditions are easy because they are *binary operations* (BinOps) just like the addition and other math functions.  To support the equality operator add this to the grammar
+For conditionals we need two things: boolean operations that evaluate to true or false,
+and an _if_ statement which will execute code when the condition is met. 
+Boolean conditions are easy because they are *binary operations* (BinOps) 
+just like the addition and other math functions.  To support the equality operator add this to the grammar
 
 ```
     MathOp = Mul | Div | Add | Sub | Eq 
@@ -140,14 +143,13 @@ For conditionals we need two things: boolean operations that evaluate to true or
     Eq  = Expr "==" Expr
 ```
 
-Update the `toAST` semantic operation with
+Update the `toAST` semantic operation in `semantics.js` with
 
 ```
         Eq: (a, _, b)  => new AST.BinOp('eq', a.toAST(), b.toAST()),
 ```
 
-
-And update `BinOp` to support the `eq` operator by adding a new line at the bottom of `resolve.
+And update `BinOp` to support the `eq` operator by adding a new line at the bottom of `resolve`.
 
 ```
 class BinOp {
@@ -187,10 +189,10 @@ In fact, *every* boolean operation can be implemented this way.  Here's the fina
 
 And extra semantic rules
 
-        Eq: (a, _, b)  => new AST.BinOp('eq', a.toAST(), b.toAST()),
+        Eq:  (a, _, b) => new AST.BinOp('eq',  a.toAST(), b.toAST()),
         Neq: (a, _, b) => new AST.BinOp('neq', a.toAST(), b.toAST()),
-        Gt: (a, _, b)  => new AST.BinOp('gt', a.toAST(), b.toAST()),
-        Lt: (a, _, b)  => new AST.BinOp('lt', a.toAST(), b.toAST()),
+        Gt:  (a, _, b) => new AST.BinOp('gt',  a.toAST(), b.toAST()),
+        Lt:  (a, _, b) => new AST.BinOp('lt',  a.toAST(), b.toAST()),
         Gte: (a, _, b) => new AST.BinOp('gte', a.toAST(), b.toAST()),
         Lte: (a, _, b) => new AST.BinOp('lte', a.toAST(), b.toAST()),
 
@@ -217,20 +219,26 @@ test('4<=5',true);
 test('4>=5',false);
 ```
 
+Thanks to the BinOp work we did last time adding boolean conditionals is trivial.
+
 
 ## Code Blocks
 
 
-Now that we have an expression which can resolve to true or false, we need blocks of code to evaluate.
+Now that we have an expression which can resolve to true or false, we need blocks of 
+code to evaluate.
 
-So far our little language can do math and set variables, but it can't really do more than one thing at time. It only supports one expression per-parse. Later on we'll want to have functions which do multiple calculations and return the final result. To do this we need a way to combine expressions.  Let's define what we want:
-
+So far our little language can do math and set variables, but it can't really do 
+more than one thing at time. It only supports one expression per-parse. 
+Later on we'll want to have functions which do multiple calculations and 
+return the final result. To do this we need a way to _combine_ expressions.  
+Let's define what we want:
 
 * An *Expression* is something which evaluates to a single value. `4` is an expression. `2*(4*5+myVar)` is also an expression. And once we support function calls  `5 * doStuff(3,4))` will also be an expression. 
 * A *Statement* is an expression which doesn't return a value. For simplicity sake we'll say that all statements return `null`.
 * A *Block* is a sequence of expressions or statements which are evaluated in order, and then returns the value of the final expression. 
 
-Now create a Block class in `ast.js`. When `resolve` is called it resolves all of the statements
+Now create a `Block` class in `ast.js`. When `resolve` is called it resolves all of the statements
  and returns the value of the last one. 
 
 
@@ -273,7 +281,7 @@ test('{4+5}',9);
 ```
 
 
-Now we can parse code like, which will return the value of the last line (23).
+Now we can parse code like this, which will return the value of the last line (23).
 ```
 { 
   x=4*5
@@ -285,7 +293,11 @@ Now we can parse code like, which will return the value of the last line (23).
 
 ## If Statement
 
-With blocks and conditions we can finally build an `if` statement. For Meow we'll use an if with three blocks. The first block is the expression that must evaluate to true or false. The second block will be evaluated if the first block is true. The else clause is optional, and will be evaluated if the first block is false.  With everything else in place implementing `if` will be easy.
+With blocks and conditions we can finally build an `if` statement. For Meow 
+we'll use an if with three blocks. The first block is the expression that must 
+evaluate to true or false. The second block will be evaluated if the first 
+block is true. The else clause is optional, and will be evaluated if the first 
+block is false.  With everything else in place implementing `if` will be easy.
 
 The `IfCondition` class in `ast.js`:
 
@@ -311,15 +323,14 @@ class IfCondition {
 A new rule in the grammar
 
 ```
-    Expr =  IfExpr | Block | Assign | Group | MathOp | Identifier | Number
-    IfExpr    = "if" Block Block ("else" Block)?
+    Expr    =  IfExpr | Block | Assign | Group | MathOp | Identifier | Number
+    IfExpr  = "if" Block Block ("else" Block)?
 ```
 
-
-A new action in the semantics
+A new action in the semantics:
 
 ```
-        IfExpr: (_,cond,thenBlock,__,elseBlock) => {
+        IfExpr: (_, cond, thenBlock, __, elseBlock) => {
             var thenBody = thenBlock.toAST();
             var elseBody = elseBlock ? elseBlock.toAST()[0] : null;
             return new AST.IfCondition(cond.toAST(), thenBody, elseBody);
@@ -338,9 +349,16 @@ test('if{4==2+3}{1}else{2}',2);
 
 ## Next Time
 
-Now all of our tests can pass and we have a real language with conditionals.  Next time we will add a while loop and real user defined functions, which is the last component required to make Meow a full usable language.
+Now all of our tests can pass and we have a real language with conditionals.  
+Next time we will add a while loop and functions, which are the last components 
+required to make Meow a full usable language.
 
-I know this feels like a lot to take in. We added boolean expressions, blocks, and the if statement, but hopefully it feel straightforward.  Each time we added a new language feature we implemented them in the same way: define what we want, add a new grammar rule, create a new AST class, add an action to the semantics, and add a test case. Languages can be complex, so this  approach of carefully adding code and tests keeps the project organized and understandable.
+I know this feels like a lot to take in. We added boolean expressions, blocks, 
+and the if statement, but hopefully it feels straight forward.  Each time we 
+added a new language feature we implemented them in the same way: define what 
+we want, add a new grammar rule, create a new AST class, add an action to the 
+semantics, and add a test case. Languages can be complex, so this 
+approach of carefully adding code and tests keeps the project organized and understandable.
 
 
 
