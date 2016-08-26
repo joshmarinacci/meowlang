@@ -68,15 +68,16 @@ test('{ x=8  while { x < 5 } { x = x+1 } } ',null);
 test('4 + 5  //+ 6',9);
 
 //string literals
-//test(' "foo" ',"foo");
-//test(' "foo" + "bar" ', "foobar");
-//test('print("foo") ', 'foo');
+test(' "foo" ',"foo");
+test(' "foo" + "bar" ', "foobar");
+
 
 
 /*
 //native function calls
 test("print(4)",4); //returns 4, prints 4
 test("max(4,5)",5); // returns 5
+test('print("foo") ', 'foo');
 
 // compound tests
 // function returns value to math expression

@@ -63,7 +63,8 @@ module.exports.make = function(semantics) {
         //reuse the number literal parsing code from `calc` operation
         Number: function (a) {
             return new AST.MNumber(a.calc());
-        }
+        },
+        String: (a, text, b) => new AST.MNumber(text.sourceString)
     });
 
     return {

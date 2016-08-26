@@ -1,6 +1,8 @@
 # A programming language in 200 lines
 
-while loop
+
+
+# while loop
 
 
 ```
@@ -60,7 +62,7 @@ test('{ x=8  while { x < 5 } { x = x+1 } } ',null);
 
 now let's add a few other missing parts. comments and string literals
 
-comments
+# comments
 
 You may remember from the first blog in this Ohm series that rules which
 begin with capital letters automatically handle whitespace. When you declare
@@ -90,11 +92,46 @@ space rule to make it also ignore comments.  Just add a few lines to the grammar
 
 Now any text on a line after the double slash (`//`) will be ignored.
 
+# String Literals
 
 So far we have only worked with numbers. Our original design was for a calculator, after all. But now
 that we want to build Meow into a full language we need string literals.
 string literals
 
+
+add to the grammar string literals
+
+```
+    Expr =  WhileExpr | IfExpr | Block | Assign | MathOp | Group | Identifier | Number | String
+...
+    Term = Group | Identifier | Number | String
+...    
+    qq = "\""
+    String = qq (~qq any)+ qq
+```
+
+
+add new action the semantics. uses the increasingly miss named MNumber class
+```
+        String: (a, text, b) => new AST.MNumber(text.sourceString)
+```
+
+more unit tests
+
+```
+//string literals
+test(' "foo" ',"foo");
+test(' "foo" + "bar" ', "foobar");
+```
+
+
+
+
+# function calls
+
+now let's add the ability to call functions. 
+
+we'll start with native functions implemented in javascript
 
 
 function call to native function
