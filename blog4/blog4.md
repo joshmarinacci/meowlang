@@ -2,6 +2,17 @@
 
 while loop
 
-user defined function calls
+comments
+
+string literals
+
+function call to native function
+
+more tests
+
+user defined function
+
+
+
 
 
