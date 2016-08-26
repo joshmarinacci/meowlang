@@ -1,7 +1,9 @@
-# Ohm: Build a Calculator
+# Ohm: Building a Calculator
 
 
-[Last time](link) I introduced Ohm, an open source meta language parser with an easy to use syntax. We built a parser for different number formats.  This week we will extend the parser to calculate arithmetic expressions.
+[Last time](link) I introduced [Ohm](https://github.com/cdglabs/ohm), an open source meta language parser 
+with an easy to use syntax. We built a parser for different number formats.  This week we will 
+extend the parser to calculate arithmetic expressions.
 
 Open up your grammar file and add this code inside `CoolNums {`
 
@@ -21,14 +23,23 @@ Open up your grammar file and add this code inside `CoolNums {`
           | Number
 ```
 
-The above code is all we need to define full arithmetic with parenthesis and precedence. This is a bit complicated so let's break it down into pieces. We can read the grammar like this: `Expr` is defined as an additive expression. An additive expression can be one of an addition, subtraction, or a multiplication expression. A multiplication expression can be one of times, divide or a primary expression. A primary expression is an expression (`Expr`) inside parenthesis or a number.
+The above code is all we need to define full arithmetic with parenthesis and precedence. 
+This is a bit complicated so let's break it down into pieces. We can read the grammar 
+like this: `Expr` is defined as an additive expression. An additive expression can 
+be one of an addition, subtraction, or a multiplication expression. A multiplication 
+expression can be one of times, divide or a primary expression. A primary expression 
+is an expression (`Expr`) inside parenthesis or a number.
 
 At first this looks very strange.  Why is the general expression (`Expr`) only
-an additive expression, and is AddExpr just the first line or all three lines? And how would we write this from scratch if we didn't know how to do it beforehand?
+an additive expression, and is AddExpr just the first line or all three lines? 
+And how would we write this from scratch if we didn't know how to do it beforehand?
+Let's break it down into pieces.
 
 ## Compound Expressions
 
-Ohm supports a compound syntax to let you define multiple rules at once. Adding a `--` after a rule makes it a sub-rule with alternation. An alternation means something *or* something else.
+Ohm supports a compound syntax to let you define multiple rules at once. Adding 
+a `--` after a rule makes it a sub-rule with alternation. An alternation means 
+something *or* something else.
  
 This code:
 
@@ -46,12 +57,16 @@ AddExpr_plus   = AddExpr "+" MulExpr
 AddExpr_minus  = AddExpr "-" MulExpr
 ```
 
-In other words there are three forms of the `AddExpr`: the plus form, the minus form, or a multiplication form. Rather than having to break them out separately Ohm lets us combine them into a more compact and cleaner syntax.  We still read it as:  'an _add_ expression can be one of _add plus mul_ or _add - mul_ or just _mul_.'
+In other words there are three forms of the `AddExpr`: the plus form, the minus form, 
+and a multiplication form. Rather than having to break them out separately Ohm lets 
+us combine them into a more compact and cleaner syntax.  We still read it as:  
+'an _add_ expression can be one of _add plus mul_ or _add - mul_ or just _mul_.'
 
 
 ## Operator Precedence
 
-Second, why do we need to group the plus and minus versions of add together, separate from the times and divide forms?  This comes down to operator precedence.
+Second, why do we need to group the plus and minus versions of add together, 
+separate from the times and divide forms?  This comes down to operator precedence.
 
 Consider the following expression:
 
@@ -59,7 +74,10 @@ Consider the following expression:
 4 + 5 * 6
 ```
 
-Do you evaluate the + or the * first? The order in which we execute the operators affects the final answer. In many programming languages (including JavaScript)  there is a defined operator precedence order. Usually multiplication and division come before addition and subtraction.  So the expression above is equivalent to:
+Do you evaluate the + or the * first? The order in which we execute the 
+operators affects the final answer. In many programming languages (including JavaScript)
+there is a defined operator precedence order. Usually multiplication and division 
+come before addition and subtraction. The expression above is equivalent to:
 
 ```
 4 + (5*6)
@@ -72,19 +90,39 @@ left to right *without* any precedence. So the expression above would be equival
 (4+5) * 6
 ```
 
-For this calculator we will go with the JavaScript form of precedence. We must group the multiplication and division together and make sure they are executed before the addition and subtraction. That's why Expr is made up of AddExpr, and AddExpr contains MulExpr, and MulExpr contains the PriExpr. Only in PriExpr do we get to actual numbers.  This seems backwards. If MulExpr comes first then why is is listed after AddExpr? We need to consider how things will be evaluated.  4 + 5 * 6 will be parsed into this:
+For this calculator we will go with the JavaScript form of precedence. We must 
+group the multiplication and division together and make sure they are executed 
+before the addition and subtraction. That's why `Expr` is made up of `AddExpr`, 
+and `AddExpr` contains `MulExpr`, and `MulExpr` contains the `PriExpr`. 
+Only in `PriExpr` do we get to actual numbers.  At first this seems backwards. If
+`MulExpr` comes first then why is is listed after `AddExpr`? 
+
+We need to consider how things will be evaluated.  `4 + 5 * 6` will be parsed into this:
 
 ```
 Add(4, Mul(5,6))
 ```
 
-The *innermost* expression is evaluated first, so the MulExpr must be closest to Number.  Adds will be evaluated only after all the Muls are done. We define Add add in terms of Mul because Add will always contain Mul. Mul will never contain Add (without parenthesis). 
+The *innermost* expression is evaluated first, so the `MulExpr` must be closest 
+to `Number`.  Adds will be evaluated only after all the Muls are done. 
+We define Add in terms of Mul because Add will always contain Mul. 
+Mul will never contain Add (without parenthesis). 
 
-I realize this is tricky to understand, and honestly it's one of the reasons I prefer Smalltalk's approach of left to right.  In general you only need to implement this once and it's common to just borrow from another grammar that get's it right. I've adapted this one from the official [Ohm Math](https://github.com/cdglabs/ohm/blob/master/examples/math/index.html) example.
+I realize this is tricky to understand, and honestly it's one of the 
+reasons I prefer Smalltalk's approach of left to right.  In general 
+you only need to implement this once and it's common to just borrow 
+from another grammar that get's it right. I've adapted this one from 
+the official [Ohm Math](https://github.com/cdglabs/ohm/blob/master/examples/math/index.html) example.
 
 ## Performing Arithmetic
 
-Now that we have a parser that we *know* processes things in the right order we can actually do some arithmetic. As we discussed last time, the _grammar_ just parses text into a tree without actually doing any work. The _semantics_ define the real actions which do things. Each action function will perform an operation on the results of it's sub nodes.  So 4+5 will add the 4 and 5 nodes together. Each of those nodes is an int which returns a real JS number.
+Now that we have a parser that we *know* processes things in the right order 
+we can actually do some arithmetic. As we discussed last time, 
+the _grammar_ just parses text into a tree without actually doing any 
+work. The _semantics_ define the real actions which do things. Each action 
+function will perform an operation on the results of its sub nodes.  
+So `4+5` will add the `4` and `5` nodes together. Each of those nodes 
+is an int which returns a real JS number.
 
 Here's what the actions look like for arithmetic:
 
@@ -127,29 +165,25 @@ That's actually it.  Just do the basic math for each expression.  Of course,
 if we just built a simple calculator we wouldn't be using the full power of Ohm.
  
  
-# Using an AST  
+# Building an Expression Tree  
 
 Our goal is to eventually extend this into a real programming language and
-what we have now just won't do.  This evaluates expressions as they are found
-in the source code. that's fine for basic math, but what if we want to handle
+what we have now just won't do.  It evaluates expressions as they are found
+in the source code. That's fine for basic math, but what if we want to handle
 calling a function inside of a loop? The action would only be called once, but
-we want to invoke the function every time inside of the loop. The solution is
-to not perform arithmetic inside of the semantic operation. Instead we must
-return a tree of objects which represent the arithmetic (or later, loops and functions)
-and can be evaluated anytime we need it.  This is called an expression tree, and
+we want to invoke the function every time inside of the loop! 
+
+Eventually we will also want variables with the ability to run code like `x=10`
+followed by `x*2`. Now we need a symbol table and a way to look up 
+the *current* value of the symbol when the math is evaluated.  Doing math immediately
+simply won't work anymore.
+
+The solution is to not perform arithmetic inside of the semantic operation. Instead we must
+return a tree of objects which represent the arithmetic (and later loops and functions)
+and can be evaluated anytime we need it.  This is called an *expression tree*, and
 it's the next big step for building a language interpreter.
 
-the ability to run code like `x=10` followed by `x*2`.
-
-this only works for constants. each operation immediately does math on the values 
-next to it. that only works for constants. what if we defined a variable earlier and
-want to perform arithmetic on it? now we need a symbol table and a way to look up
-the *current* value of the symbol when the math is evaluated.  doing math immediately
-wont' work anymore. instead we need an AST.
-
-
-Further more we need a way to store values as variables, using symbols, and look
-up these symbols.  Let's define some terms
+Let's define some terms:
 
 * A *number* is an actual numeric constant. Something like 4 or 4.5 or 0x45. 
 * A *symbol* is an identifier which *points to* a number. Something like `x` or `myVal`.
@@ -161,8 +195,8 @@ The key concept when building a language is _resolution_. We can say that the ex
 With these definitions we can start to build some code.
  
  
-First, let's create a class which represents a number. It stores an underlying javascript value, `val`, and
-returns itself when `resolve` is called.
+First, let's create a class which represents a number. It stores an underlying 
+javascript value, `val`, and returns itself when `resolve` is called.
 
 ```
 class MNumber {
@@ -172,13 +206,13 @@ class MNumber {
 }
 ```
 
-Note that I added a `jsEquals` method. This lets us compare the number to a real Javascript number. This is helpful
+Note that I added a `jsEquals` method. This lets us compare the number to a 
+real Javascript number. It is not part of our exposed API, but it is helpful 
 when writing our unit tests later.
 
 
-
-Now we can define our basic binary operations for arithmetic. Since addition, subtraction, and the others
- are basically all the same, create a single BinOp class instead of one for each operation.
+Now we can define our basic binary operations for arithmetic. Since addition, subtraction, 
+and the others are basically all the same, create a single BinOp class instead of one for each operation.
  
 ```
 class BinOp {
@@ -198,14 +232,17 @@ class BinOp {
 }
 ```
 
-BinOp accepts the operation and two values to perform the operation on (called _operands_ in math terms).  The
-resolve method will call resolve on the two operands, pull out the underlying javascript values, then return
-a new MNumber by combining thew to values.  We could skip calling resolve on the operands because MNumber.resolve() \
-just returns itself. I included the resolve call here because later on the operand might not be a number. 
-It might be a symbol or function instead. Defining eveything in terms of `resolve` keeps the code future-proof.
+BinOp accepts the operation and two values to perform the operation on 
+(called _operands_ in math terms).  The resolve method will call resolve 
+on the two operands, pull out the underlying javascript values, then return
+a new `MNumber` by combining them into new values.  We could skip 
+calling resolve on the operands because `resolve()` on a plain number just returns 
+itself. I included the resolve call here because later on the operand 
+might not be a number. It might be a symbol or function instead. 
+Defining eveything in terms of `resolve` keeps the code future-proof.
 
-Now we can create our new semantics operation called toAST(). Keep the existing operation, calc, in place. Add to
-it by creating a second semantics.
+Now we can create our new semantics operation called `toAST()`. Keep the
+existing operation, `calc`, in place. Add to it by creating a second semantics.
  
  
 ```
@@ -227,14 +264,15 @@ var ASTBuilder = semantics.addOperation('toAST', {
 });
 ```
           
-As before, most actions recursively call toAST() on the argument. However, the action for Number
-actually calls 'calc' instead. Calc already defined how to parse numbers. This is a a key part of Ohm's design.
-You can have multiple semantic operations which call each-other, as long as they are in the
-same set of semantics. This is another way to reuse code across parsers.  If we one day want to
-extend our math language further we could do it by creating additional semantic operations instead of modifying
-the originals.
-  
+As before, most actions recursively call `toAST()` on the argument. However, 
+the action for Number actually calls `calc` instead. Calc already defined how 
+to parse numbers. We don't need to write it again. 
 
+This delegation system is a key part of Ohm's design. You can have multiple 
+semantic operations which call each other, as long as they are in the
+same set of semantics. This is another way to reuse code across parsers.  
+If we one day want to extend our math language further we could do it by 
+creating additional semantic operations instead of modifying the originals.
 
 With the toAST semantics in place we can now rewrite the test code like this:
 
@@ -250,24 +288,25 @@ function test(input, answer) {
 }
 ```
 
-Calling toAST() returns an expression object instead of a value. Then we can call resolve on this object
- to get the final value. This might seem like a lot of work for what is fundamentally the same behavior
- as our earlier `calc` operation that did the arithmetic inline.  The reason we did all this is to lay
- the ground for a more advanced feature: variables
- 
- 
- 
+Calling toAST() returns an expression object instead of a value. Then we can 
+call resolve on this object to get the final value. This might seem like a lot 
+of work for what is fundamentally the same behavior as our earlier `calc` 
+operation that did the arithmetic inline.  The reason we did all this is to lay
+the ground for a more advanced feature: _variables_
+
 # Adding Symbols 
 
 
-To support variables we need a concept called a symbol. A symbol is just a name, or identifier, which points to a real
-value. In many case we could use a real number value instead of a symbol, but symbols give us a special
-ability: symbols can be redefined. You can write x=2 and x*5 to get 10. Then write x=3 and call x*5 again
-to get 15. The same code can be invoked multiple times with different results by changing what the symbol 
-points to. This is a fundamental concept of computer science that makes computation possible.
+To support variables we need a concept called a symbol. A symbol is just a name, 
+or identifier, which points to a real value. In many cases we could use a real number 
+value instead of a symbol, but symbols give us a special ability: symbols can be 
+redefined. You can write `x=2` and `x*5` to get 10. Then write `x=3` and call `x*5` again
+to get `15`. The same code can be invoked multiple times with different results by 
+changing what the symbol _points_ to. This is a fundamental concept of computer 
+science that makes computation possible.
  
-Let's start by creating an MSymbol class (I didn't use Symbol because that will clash with the future
-native Symbol class in native Javascript).
+Let's start by creating an `MSymbol` class (I didn't use Symbol because that will 
+clash with the future native Symbol class in Javascript).
  
 ```
 class MSymbol {
@@ -280,9 +319,9 @@ class MSymbol {
 }
 ```
 
-Now we need a place to actually sort what the symbols point to. This is called a Scope. For now we will have
-only one Scope called GLOBAL, but in the future we will have more.
-
+Now we need a place to actually sort what the symbols point to. This is called a 
+Scope. For now we will have only one Scope called GLOBAL, but in the future we 
+will have more.
 
 
 ```
@@ -398,7 +437,10 @@ test('x * 0x2',20);
 
 ## Conclusion
 
-Building a language seems complex at first, but by breaking it down into small steps it becomes quite approachable. We've actually
-done most of the hard work already.  We expanded our number parser into a full calculator, and then into a baby programming language by adding symbols and an AST.  Next time we will add conditionals, loops, and function calls to turn this into a real programming language. 
+Building a language seems complex at first, but by breaking it down into small steps 
+it becomes quite approachable. We've actually done most of the hard work already.  
+We expanded our number parser into a full calculator, and then into a baby programming 
+language by adding symbols and an AST.  Next time we will add conditionals, loops, and 
+function calls to turn this into a real programming language. 
 
 
