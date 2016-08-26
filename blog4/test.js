@@ -4,6 +4,7 @@ var ohm = require('ohm-js');
 var fs = require('fs');
 var assert = require('assert');
 var Scope = require('./ast').Scope;
+var MSymbol = require('./ast').MSymbol;
 
 var grammar = ohm.grammar(fs.readFileSync('blog4/grammar.ohm').toString());
 var semantics = grammar.createSemantics();
@@ -11,6 +12,15 @@ var semantics = grammar.createSemantics();
 var ASTBuilder = require('./semantics').make(semantics).ASTBuilder;
 
 var GLOBAL = new Scope(null);
+GLOBAL.setSymbol(new MSymbol("print"),function(arg1){
+    console.log("print:",arg1.val);
+    return arg1;
+});
+GLOBAL.setSymbol(new MSymbol("max"), function(A,B) {
+    if(A.val > B.val) return A;
+    return B;
+});
+
 
 function test(input, answer) {
     var match = grammar.match(input);
@@ -73,7 +83,6 @@ test(' "foo" + "bar" ', "foobar");
 
 
 
-/*
 //native function calls
 test("print(4)",4); //returns 4, prints 4
 test("max(4,5)",5); // returns 5
@@ -81,21 +90,22 @@ test('print("foo") ', 'foo');
 
 // compound tests
 // function returns value to math expression
+test('6*max(4,5)',30);
 test('max(4,5)*6',30);
+
 test('4*max(4,5)',20);
 test('4*max(5,4)',20);
 // function returns value to function
 test('max(4,max(6,5))',6);
 test('max(max(6,5),4)',6);
 
-*/
 
-/*
+
 //if statement with native function calls
-test("1 -> x",1);
-test('if { x < 5 } { print("foo") x+1 -> x }', 2);
+test("x = 1",1);
+test('if { x < 5 } { print("foo") x=x+1 }', 2);
 test('if { x > 5 } { 17 } else { 18 }', 18);
-*/
+
 
 /*
 //simple user defined function which ignores arguments

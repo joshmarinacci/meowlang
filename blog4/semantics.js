@@ -57,6 +57,8 @@ module.exports.make = function(semantics) {
             return new AST.IfCondition(cond.toAST(), thenBody, elseBody);
         },
         WhileExpr: (_, cond, body) => new AST.WhileLoop(cond.toAST(), body.toAST()),
+        FunCall: (funName,_1,args,_2) => new AST.FunctionCall(funName.toAST(), args.toAST()),
+        Arguments: (a) => a.asIteration().toAST(),
         Identifier: function (a, b) {
             return new AST.MSymbol(this.sourceString, null)
         },

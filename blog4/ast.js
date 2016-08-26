@@ -105,6 +105,24 @@ class WhileLoop {
 }
 
 
+class FunctionCall {
+    constructor(fun, args) {
+        this.fun = fun;
+        this.args = args;
+    }
+    resolve(scope) {
+        //lookup the real function from the symbol
+        //if(!scope.hasSymbol(this.fun.name)) throw new Error("cannot resolve symbol " + this.fun.name);
+        var fun = scope.getSymbol(this.fun.name);
+        //resolve the args
+        var args = this.args.map((arg) => arg.resolve(scope));
+        //execute the real javascript function
+        return fun.apply(null,args);
+    }
+}
+
+
+
 module.exports = {
     MNumber:MNumber,
     MSymbol:MSymbol,
@@ -113,5 +131,6 @@ module.exports = {
     Scope:Scope,
     Block: Block,
     IfCondition:IfCondition,
-    WhileLoop:WhileLoop
+    WhileLoop:WhileLoop,
+    FunctionCall:FunctionCall
 };

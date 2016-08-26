@@ -129,14 +129,97 @@ test(' "foo" + "bar" ', "foobar");
 
 # function calls
 
-now let's add the ability to call functions. 
+now let's add the ability to call functions.
+ 
+a function call can take the place of any standard terminal expression (number, identifier, etc) so let's update
+Term to support FunCall. The FunCall itself is an identifier followed by arguments in parenthesis.
 
-we'll start with native functions implemented in javascript
+``` 
+    Term = Group | FunCall | Identifier | Number | String
+     ...
+
+    FunCall = Identifier "(" Arguments ")"
+    Arguments = ListOf<Expr, ",">
+```
+
+ 
+Now let's build an AST object to represent function calls
+
+```
+class FunctionCall {
+    constructor(fun, args) {
+        this.fun = fun;
+        this.args = args;
+    }
+    resolve(scope) {
+        //lookup the real function from the symbol
+        var fun = scope.getSymbol(this.fun.name);
+        //resolve the args
+        var args = this.args.map((arg) => arg.resolve(scope));
+        //execute the real javascript function
+        return fun.apply(null,args);
+    }
+}
+```
+
+This code looks similar to what we've done for conditionals and loops. It is constructed from a symbol referring
+to the function and the arguments that will be sent to the function. In the resolution phase the args are each
+resolved, then the function is applied with these args.
+
+Finally we can add the new semantic action rules.
+
+```
+    FunCall: (funName,_1,args,_2) => new AST.FunctionCall(funName.toAST(), args.toAST()),
+    Arguments: (a) => a.asIteration().toAST(),
+```
+
+Of course we don't have any functions to call yet. We don't ahve a syntax to define new functions yet, so let's
+pre-fill the global scope with some functions written in javascript instead of Meow.
+
+```
+var GLOBAL = new Scope(null);
+GLOBAL.setSymbol(new MSymbol("print"),function(arg1){
+    console.log("print:",arg1.val);
+    return arg1;
+});
+GLOBAL.setSymbol(new MSymbol("max"), function(A,B) {
+    if(A.val > B.val) return A;
+    return B;
+});
+```
+
+Print will print it's first argument and max will return the larger of the two arguments.  Now we can write
+some test functions.
+
+```
+//native function calls
+test("print(4)",4); //returns 4, prints 4
+test("max(4,5)",5); // returns 5
+test('print("foo") ', 'foo');
+
+// compound tests
+// function returns value to math expression
+test('6*max(4,5)',30);
+test('max(4,5)*6',30);
+
+test('4*max(4,5)',20);
+test('4*max(5,4)',20);
+// function returns value to function
+test('max(4,max(6,5))',6);
+test('max(max(6,5),4)',6);
+```
 
 
-function call to native function
+So far so good. Everything we've implemented has the same structure as previous features. We extend the grammar,
+add an AST object (if necessary), add an action, the put in more tests.
 
-more tests
+
+
+  
+User defined functions will be a little bit harder, however.
+
+
+
 
 user defined function
 

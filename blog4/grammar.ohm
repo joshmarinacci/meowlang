@@ -15,7 +15,7 @@ CoolNums {
     Gte = Expr ">=" Expr
 
 
-    Term = Group | Identifier | Number | String
+    Term = Group | FunCall | Identifier | Number | String
 
     Assign = Identifier "=" Expr
     Identifier = letter (letter|digit)*
@@ -25,6 +25,9 @@ CoolNums {
 
     IfExpr    = "if" Block Block ("else" Block)?
     WhileExpr = "while" Block Block
+
+    FunCall = Identifier "(" Arguments ")"
+    Arguments = ListOf<Expr, ",">
 
     qq = "\""
     String = qq (~qq any)+ qq
