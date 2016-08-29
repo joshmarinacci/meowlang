@@ -1,8 +1,22 @@
 # Meow: A Programming Language in 180 lines
 
+In previous blogs in this series we learned how to use Ohm to parse numbers, build an expression tree,
+and process blocks of code with conditionals. In this final fourth part of the Ohm series we will finish 
+up our complete programming language, Meow, with looping and real function calls. Thanks to the power of Ohm
+our final language will be implemented in only 180 lines of code.
+
+
 
 
 # Adding the While Loop
+
+Now that we have conditionals and blocks would could write a loop by hand with just an if statement and a counter
+variable, but most languages provide a proper _while_ loop.  Since we already implement block last time, the while loop will
+be simple to build. It is the keyword `while` followed by a condition block that resolves to true or false (a boolean), followed by
+a body block which is executed until the condition block returns false.  The while loop itself will resolve to the last
+value from the body.
+
+This is a simple example of a while loop in action.
 
 
 ```
@@ -14,13 +28,17 @@
 }
 ```
 
-add WhileExpr to grammar.ohm
+
+Let's start by adding a While expression to the grammar in `grammar.ohm`.
 
 ```
     Expr =  WhileExpr | IfExpr | Block | Assign | MathOp | Group | Identifier | Number
+
+    WhileExpr = "while" Block Block
 ```
 
-add WhileLoop to ast.js
+Then add a new `WhileLoop` class for our expression tree in `ast.js`. This class
+executes the body block over and over until the condition resolves to false.
 
 ```
 class WhileLoop {
@@ -41,14 +59,15 @@ class WhileLoop {
 ```
 
 
-add WhileExpr to semantics.js
+Next add a new semantics action for the WhileExpr. This action just creates an instance
+of the WhileLoop class above whenever a `while` rule is found in the code.
 
 ```
         WhileExpr: (_, cond, body) => new AST.WhileLoop(cond.toAST(), body.toAST()),
 ```
 
 
-add new unit tests
+And finally we need some unit tests.
 
 
 ```
@@ -58,25 +77,31 @@ test('{ x=4  while { x < 5 } { x = x+1 } } ',5);
 test('{ x=8  while { x < 5 } { x = x+1 } } ',null);
 ```
 
+Notice that the last test resolves to null. This is because x is already greater than five when the loop starts
+so the body is never executed at all. The while loop must resolve to the last value of the body, but since the
+body never executed either it return snull.
 
-Now let's add a few other missing parts: comments and string literals
+
+
 
 # Line Based Comments
 
-You may remember from the first blog in this Ohm series that rules which
+Now let's add a few other missing parts of our language: comments and string literals
+
+You may remember from the first blog in this series that rules which
 begin with capital letters automatically handle whitespace. When you declare
-a rule like  
+a rule like this 
+ 
 ```
 Expr = WhileExpr | IfExpr
 ```
  
-it's really doing something like this:
+Ohm is really doing something like this:
 
 ```
 Expr = space* WhileExpr space* | space* IfExpr space*
 ```
  
-
 Ohm handles the whitespace for us using a built in rule called `space`.  Normally `space`
 just handles common whitespace characters like space, tab, and newlines, (which is also why
 we don't need the semicolon for the end of lines). However, we can override the built in
@@ -95,10 +120,11 @@ Now any text on a line after the double slash (`//`) will be ignored.
 
 So far we have only worked with numbers. Our original design was for a calculator, after all. But now
 that we want to build Meow into a full language we need string literals.
-string literals
 
 
-add to the grammar string literals
+Let's add string literals to the grammer with a new `String` rule. Strings must be between double quotes (").
+Notice that the rule for String says it can be anything which isn't qq (the double quote). That means
+it could even be a newline! Yes, multi-line string literals are valid in our language.
 
 ```
     Expr =  WhileExpr | IfExpr | Block | Assign | MathOp | Group | Identifier | Number | String
@@ -110,12 +136,15 @@ add to the grammar string literals
 ```
 
 
-add new action the semantics. uses the increasingly miss named MNumber class
+Now let's add a new action to the semantics for String. This action creates a new instance of MNumber from
+the source string.  Now that we are using the MNumber class for booleans and strings, we should probably
+rename it to something more general in the future, like MValue.
+
 ```
         String: (a, text, b) => new AST.MNumber(text.sourceString)
 ```
 
-more unit tests
+And of course a few more unit tests
 
 ```
 //string literals
@@ -128,10 +157,13 @@ test(' "foo" + "bar" ', "foobar");
 
 # Function Calls
 
-now let's add the ability to call functions.
- 
-a function call can take the place of any standard terminal expression (number, identifier, etc) so let's update
-Term to support FunCall. The FunCall itself is an identifier followed by arguments in parenthesis.
+Now let's add the ability to call functions.  Arguably function calls are the only thing required for a language
+to be a _real_ programming language. We could have implemented only function calls and built everything on top of
+that (like LISP), but most real world programming languages use all of the other language features we built before.
+With those in place we can now build function calls.
+
+A function call can take the place of any standard terminal expression (number, identifier, etc) so let's update
+`Term` to support `FunCall`. The `FunCall` itself is an identifier followed by its arguments in parenthesis.
 
 ``` 
     Term = Group | FunCall | Identifier | Number | String
@@ -141,8 +173,7 @@ Term to support FunCall. The FunCall itself is an identifier followed by argumen
     Arguments = ListOf<Expr, ",">
 ```
 
- 
-Now let's build an AST object to represent function calls
+Now let's build an expression class object to represent function calls
 
 ```
 class FunctionCall {
@@ -172,8 +203,8 @@ Finally we can add the new semantic action rules.
     Arguments: (a) => a.asIteration().toAST(),
 ```
 
-Of course we don't have any functions to call yet. We don't ahve a syntax to define new functions yet, so let's
-pre-fill the global scope with some functions written in javascript instead of Meow.
+Of course we don't have any functions to call yet. We don't have a syntax to define _new_ functions yet, so let's
+pre-fill the global scope with some hard coded functions written in plain Javascript.
 
 ```
 var GLOBAL = new Scope(null);
@@ -187,7 +218,7 @@ GLOBAL.setSymbol(new MSymbol("max"), function(A,B) {
 });
 ```
 
-Print will print it's first argument and max will return the larger of the two arguments.  Now we can write
+The `print` function will print it's first argument and `max` will return the larger of its two arguments.  Now we can write
 some test functions.
 
 ```
@@ -209,14 +240,15 @@ test('max(max(6,5),4)',6);
 ```
 
 
-So far so good. Everything we've implemented has the same structure as previous features. We extend the grammar,
-add an AST object (if necessary), add an action, the put in more tests. User defined functions will be a little bit harder, however.
+So far so good. Everything we've implemented has the same structure as previous language features. We extended the grammar,
+added an AST object (if necessary), added a semantic action, then put in more tests. 
+User defined functions will be a little bit harder, however.
 
 
 # User Defined Functions
 
-User defined functions are functions created in the Meow language rather than in native Javascript.  In Meow
-we define a function with the `fun` keyword like this:
+User defined functions are functions created in the Meow language itself rather than in native Javascript.  In Meow
+we will define a function with the `fun` keyword like this:
 
 
 ```
@@ -230,8 +262,8 @@ we define a function with the `fun` keyword like this:
 ```
 
 The body of a function is just a block. As we defined earlier, a block is a sequence of statements that returns the
-value of the last one. This implicit return means we don't need to have an explicit `return` keyword. The code
-above will return 1 plus the z argument.  This is the grammar update for function definitions. 
+value of the last one. This implicit return means we don't need to have a `return` keyword. The code
+above will return 1 plus the z argument.  This is the grammar update for function definitions in `grammar.ohm`. 
 
 
 ```
@@ -241,7 +273,7 @@ above will return 1 plus the z argument.  This is the grammar update for functio
     Parameters = ListOf<Identifier, ",">
 ```
 
-These two new rules new new semantic actions of course:
+Our two new grammar rules need new semantic actions of course:
 
 ```
         FunDef: (_1, name, _2, params, _3, block) => new AST.FunctionDef(name.toAST(), params.toAST(), block.toAST()),
@@ -249,14 +281,16 @@ These two new rules new new semantic actions of course:
 ```
 
 
-So far we have built the FunDef feature the same as previous features. Here's where it gets tricky: scope.
-The function has direct access to the variables passed in as parameters, but it *also* has access to variables
+So far we have built the `FunDef` feature the same as previous features but here's where it gets tricky: scope.
+A function has direct access to the variables passed to it as parameters, but it *also* has access to variables
 defined outside the function, unless one of the parameters has the same name.  To build this properly we need
-to expand the definition of scope.  
+to expand our definition of scope.  
 
-A scope is a list of names which map to values using symbols. A scope also has a *parent* scope. If a symbol
-can't be found in the scope then it will ask it's parent for the value instead.  This implements the nested
-scope rules for functions.  So we need to update the Scope class accordingly:
+A `Scope` is a list of names which map to values using symbols. A scope also has a *parent* scope. If a symbol
+can't be found in the scope then it will ask it's parent for the value instead. If the parent can't find the symbol
+then it will ask *its* parent, and so on up the chain until we get to the GLOBAL scope. 
+To implement this we need to update the Scope class with new constructor, `getSymbol`, and 
+`makeSubScope` functions.
 
 
 ```
@@ -279,7 +313,7 @@ class Scope {
 ```
 
 
-Now we can make the FunctionDef AST object:
+Now we can make the FunctionDef expression object:
 
 ```
 class FunctionDef {
@@ -293,7 +327,7 @@ class FunctionDef {
 When the function definition is resolved it will create a new symbol in its scope which points to the actual
 function block. This function block will create a sub-scope for the function call, and fill
 this scope with the values of the arguments.  This is dynamic, so we need to do the argument
-resolution *when the function is called* not when it is declared.  To do this we will use
+resolution _when the function is called_ not when it is declared.  To do this we will use
 a nested function like this:
 
 
@@ -351,6 +385,11 @@ Embed it in a webpage or cross-generate code for an embedded processor. Almost a
 you want to do is just a few parser rules away.
 
 
+Resources
+
+github
+ohm
+ometa
 
 
  
