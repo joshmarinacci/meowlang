@@ -201,7 +201,7 @@ With these definitions we can start to build some code.
 First, let's create a class which represents a number. It stores an underlying 
 javascript value, `val`, and returns itself when `resolve` is called.
 
-```
+```javascript
 class MNumber {
  constructor(val) { this.val = val; }
  resolve(scope)   { return this; }
@@ -217,7 +217,7 @@ when writing our unit tests later.
 Now we can define our basic binary operations for arithmetic. Since addition, subtraction, 
 and the others are basically all the same, create a single `BinOp` class instead of one for each operation.
  
-```
+```javascript
 class BinOp {
     constructor(op, A, B) {
         this.op = op;
@@ -248,7 +248,7 @@ Now we can create our new semantics operation called `toAST()`. Keep the
 existing operation, `calc`, in place. Add to it by creating a second semantics.
  
  
-```
+```javascript
 var semantics = grammar.createSemantics();
 
 var Calculator = semantics.addOperation('calc', {
@@ -280,7 +280,7 @@ creating additional semantic operations instead of modifying the originals.
 
 With the `toAST` semantics in place we can now rewrite the test code like this:
 
-```
+```javascript
 function test(input, answer) {
     var match = grammar.match(input);
     if(match.failed()) return console.log("input failed to match " + input + match.message);
@@ -312,7 +312,7 @@ computer science which makes computation possible.
 Let's start by creating an `MSymbol` class (I didn't use the name `Symbol` because that will 
 clash with the future native Symbol class in Javascript).
  
-```
+```javascript
 class MSymbol {
     constructor(name) {
         this.name = name;
@@ -328,7 +328,7 @@ _scope_. For now we will have only one scope called GLOBAL, but in the future we
 will have more.
 
 
-```
+```javascript
 class Scope {
     constructor() {
         this.storage = {};
@@ -348,7 +348,7 @@ class Scope {
 Now we can create the `Assignment` operator which actually sets the symbol's value.
 
 
-```
+``` javascript
 class Assignment {
     constructor(sym,val) {
         this.symbol = sym;
@@ -437,6 +437,5 @@ We expanded our number parser into a full calculator, and then into a baby progr
 language by adding symbols and an AST.  Next time we will add conditionals, loops, and 
 function calls to turn this into a real programming language. 
 
-The code for this entire series is available at my [github repo](link), but don't
+The code for this entire series is available at my [github repo](https://github.com/joshmarinacci/meowlang), but don't
 cheat by looking ahead! :)
-
