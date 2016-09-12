@@ -1,8 +1,8 @@
 CoolNums {
     // just a basic integer
-    Expr =  IfExpr | Block | Assign | MathOp | Group | Identifier | Number
+    Expr =  IfExpr | Block | Assign | MathOp | Term
 
-    MathOp =  Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte | Term
+    MathOp =  Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte
     Add = Expr "+"  Term
     Sub = Expr "-"  Term
     Mul = Expr "*"  Term

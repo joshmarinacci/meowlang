@@ -102,14 +102,16 @@ Now the grammar looks like this:
 ```
 CoolNums {
     // just a basic integer
-    Expr =  Assign | Group | MathOp | Identifier | Number
+    Expr =  Assign | MathOp | Term
 
     MathOp = Mul | Div | Add | Sub
-    Add = Expr "+"  Expr
-    Sub = Expr "-"  Expr
-    Mul = Expr "*"  Expr
-    Div = Expr "/"  Expr
+    Add = Expr "+"  Term
+    Sub = Expr "-"  Term
+    Mul = Expr "*"  Term
+    Div = Expr "/"  Term
     Group = "(" Expr ")"
+    
+    Term = Group | Identifier | Number
 
 
     Assign = Identifier "=" Expr
