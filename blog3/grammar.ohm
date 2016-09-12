@@ -15,10 +15,10 @@ CoolNums {
     Gte = Expr ">=" Expr
 
 
-    Term = Group | Identifier | Number
+    Term = Group | identifier | Number
 
-    Assign = Identifier "=" Expr
-    Identifier = letter (letter|digit)*
+    Assign = identifier "=" Expr
+    identifier = letter (letter|digit)*
 
     Group = "(" Expr ")"
     Block = "{" Expr* "}"

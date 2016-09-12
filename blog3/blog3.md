@@ -111,11 +111,11 @@ CoolNums {
     Div = Expr "/"  Term
     Group = "(" Expr ")"
     
-    Term = Group | Identifier | Number
+    Term = Group | identifier | Number
 
 
-    Assign = Identifier "=" Expr
-    Identifier = letter (letter|digit)*
+    Assign = identifier "=" Expr
+    identifier = letter (letter|digit)*
 
 
     Number = oct | hex | float | int
@@ -130,6 +130,12 @@ CoolNums {
 ```
 
 
+One more slight detail. I made the `identifier` rule be lower case. This is a very subtle
+change so it's worth mentioning. Rules beginning with an upper case letter are _syntactic_,
+meaning there is an implicit `space*` match. For identifiers we don't want that, or else
+you could have an identifier with spaces in the middle of it, like `a b c`. Rules beginning
+with a lower case letter are _lexical_, meaning it will match what you specify in the rule
+and nothing else. There is no implicit whitespace stripping.
 
 
 ## Boolean Expressions
@@ -266,7 +272,7 @@ Now we can parse blocks by adding this to the grammar `grammar.ohm`:
 and change the definition of `Expr` to include `Block`
     
 ```
-Expr =  Block | Assign | AddExpr | Identifier | Number
+Expr =  Block | Assign | MathOp | Term
 ```
 
 
@@ -325,7 +331,7 @@ class IfCondition {
 A new rule in the grammar
 
 ```
-    Expr    =  IfExpr | Block | Assign | Group | MathOp | Identifier | Number
+    Expr    =  IfExpr | Block | Assign | MathOp | Term
     IfExpr  = "if" Block Block ("else" Block)?
 ```
 

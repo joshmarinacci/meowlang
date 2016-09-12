@@ -57,7 +57,7 @@ module.exports.make = function(semantics) {
             return new AST.IfCondition(cond.toAST(), thenBody, elseBody);
         },
 
-        Identifier: function (a, b) {
+        identifier: function (a, b) {
             return new AST.MSymbol(this.sourceString, null)
         },
         //reuse the number literal parsing code from `calc` operation
