@@ -74,7 +74,7 @@ Consider the following expression:
 4 + 5 * 6
 ```
 
-Do you evaluate the + or the * first? The order in which we execute the 
+Do you evaluate the + or the \* first? The order in which we execute the 
 operators affects the final answer. In many programming languages (including JavaScript)
 there is a defined operator precedence order. Usually multiplication and division 
 come before addition and subtraction. The expression above is equivalent to:
@@ -163,8 +163,8 @@ floating point, hexadecimal, and octal).
 
 That's actually it.  Just do the basic math for each expression.  Of course, 
 if we just built a simple calculator we wouldn't be using the full power of Ohm.
- 
- 
+
+
 # Building an Expression Tree  
 
 Our goal is to eventually extend this into a real programming language and
