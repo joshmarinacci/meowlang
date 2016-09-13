@@ -1,7 +1,7 @@
 # Ohm: Blocks and Conditionals
 
-Welcome back. In [blog one](link) we introduced [Ohm](https://github.com/cdglabs/ohm) and wrote 
-our own parser to handle numbers in various formats. In [blog two](link), we turned our parser 
+Welcome back. In [blog one](https://www.pubnub.com/blog/2016-08-30-javascript-parser-ohm-makes-creating-a-programming-language-easy/) we introduced [Ohm](https://github.com/cdglabs/ohm) and wrote 
+our own parser to handle numbers in various formats. In [blog two](https://www.pubnub.com/blog/2016-09-08-build-your-own-symbol-calculator-with-ohm/), we turned our parser 
 into a real arithmetic language with binary operations and symbols.  Finally in this blog we will 
 complete our language with conditionals, loops, and user defined functions.
 
@@ -182,6 +182,7 @@ Now this test case will evaluate correctly: `test('4==4',true);`.
 
 In fact, *every* boolean operation can be implemented this way.  Here's the final grammar with support for all of the common boolean operations:
 
+```
     MathOp = Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte
     Add = Expr "+"  Expr
     Sub = Expr "-"  Expr
@@ -193,17 +194,18 @@ In fact, *every* boolean operation can be implemented this way.  Here's the fina
     Lte = Expr "<=" Expr
     Gt  = Expr ">"  Expr
     Gte = Expr ">=" Expr
-
+```
 
 And extra semantic rules
 
+```
         Eq:  (a, _, b) => new AST.BinOp('eq',  a.toAST(), b.toAST()),
         Neq: (a, _, b) => new AST.BinOp('neq', a.toAST(), b.toAST()),
         Gt:  (a, _, b) => new AST.BinOp('gt',  a.toAST(), b.toAST()),
         Lt:  (a, _, b) => new AST.BinOp('lt',  a.toAST(), b.toAST()),
         Gte: (a, _, b) => new AST.BinOp('gte', a.toAST(), b.toAST()),
         Lte: (a, _, b) => new AST.BinOp('lte', a.toAST(), b.toAST()),
-
+```
 
 Extra lines in the `BinOp` class
 
