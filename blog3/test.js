@@ -53,6 +53,6 @@ test('4>=5',false);
 test('{4 5}',5);
 
 //if then else
-test('if{4==2+2}{1}',1);
-test('if{4==2+2}{1}else{2}',1);
-test('if{4==2+3}{1}else{2}',2);
+test('if{4==(2+2)}{1}',1);
+test('if{4==(2+2)}{1}else{2}',1);
+test('if{4==(2+3)}{1}else{2}',2);

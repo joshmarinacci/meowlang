@@ -7,12 +7,12 @@ CoolNums {
     Sub = Expr "-"  Term
     Mul = Expr "*"  Term
     Div = Expr "/"  Term
-    Eq  = Expr "==" Expr
-    Neq = Expr "!=" Expr
-    Lt  = Expr "<"  Expr
-    Lte = Expr "<=" Expr
-    Gt  = Expr ">"  Expr
-    Gte = Expr ">=" Expr
+    Eq  = Expr "==" Term
+    Neq = Expr "!=" Term
+    Lt  = Expr "<"  Term
+    Lte = Expr "<=" Term
+    Gt  = Expr ">"  Term
+    Gte = Expr ">=" Term
 
 
     Term = Group | identifier | Number

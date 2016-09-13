@@ -93,7 +93,9 @@ test('x * 2',20);
 
 To further clean up the code we will go back to [Smalltalk precedence](https://en.wikipedia.org/wiki/Smalltalk#Expressions). I've always
 found it a pain to remember operator precedence. From now on all expressions will
-be evaluated left to right. If you want higher precedence you have to use parenthesis. This will
+be evaluated left to right. If you want higher precedence you have to use parenthesis. 
+We do this by putting the recursive expression on the left and the terminal expression on the right. 
+For example: `Add = Expr "+" Term`. This will
 make our implementation *far* simpler, and also be easier for programmers to reason about. All arithmetic
 is now grouped under `MathOp`.
 
@@ -148,7 +150,7 @@ just like the addition and other math functions.  To support the equality operat
 ```
     MathOp = Mul | Div | Add | Sub | Eq 
 
-    Eq  = Expr "==" Expr
+    Eq  = Expr "==" Term
 ```
 
 Update the `toAST` semantic operation in `semantics.js` with
@@ -183,17 +185,17 @@ Now this test case will evaluate correctly: `test('4==4',true);`.
 In fact, *every* boolean operation can be implemented this way.  Here's the final grammar with support for all of the common boolean operations:
 
 ```
-    MathOp = Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte
-    Add = Expr "+"  Expr
-    Sub = Expr "-"  Expr
-    Mul = Expr "*"  Expr
-    Div = Expr "/"  Expr
-    Eq  = Expr "==" Expr
-    Neq = Expr "!=" Expr
-    Lt  = Expr "<"  Expr
-    Lte = Expr "<=" Expr
-    Gt  = Expr ">"  Expr
-    Gte = Expr ">=" Expr
+    MathOp =  Mul | Div | Add | Sub | Eq | Neq | Lt | Lte | Gt | Gte
+    Add = Expr "+"  Term
+    Sub = Expr "-"  Term
+    Mul = Expr "*"  Term
+    Div = Expr "/"  Term
+    Eq  = Expr "==" Term
+    Neq = Expr "!=" Term
+    Lt  = Expr "<"  Term
+    Lte = Expr "<=" Term
+    Gt  = Expr ">"  Term
+    Gte = Expr ">=" Term
 ```
 
 And extra semantic rules
